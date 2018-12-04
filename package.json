@@ -1,7 +1,7 @@
 {
   "name": "apollo-link-mock-graph",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "build/index.js",
   "license": "MIT",
   "scripts": {
     "build": "neutrino build",
@@ -19,5 +19,9 @@
     "apollo-link": "^1.2.4",
     "graphql": "^14.0.2",
     "graphql-anywhere": "^4.1.23"
-  }
+  },
+  "files": [
+    "src",
+    "build"
+  ]
 }
