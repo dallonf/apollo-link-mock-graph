@@ -141,3 +141,46 @@ it('handles an exception in a resolver', async () => {
 
   expect(err).toMatchSnapshot();
 });
+
+it('handles a lot of errors', async () => {
+  const query = gql`
+    query QueryWithErrors {
+      userById(id: "123") {
+        id
+        firstName
+        lastName
+        posts {
+          id
+          message
+          date
+          likes
+        }
+      }
+    }
+  `;
+
+  const mockGraph = {
+    Query: {
+      userById: args => {
+        return {
+          posts: [{}, {}, {}],
+        };
+      },
+    },
+  };
+  const link = new MockGraphLink(() => mockGraph);
+  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+
+  const err = await client
+    .query({
+      query,
+    })
+    .then(
+      () => {
+        throw new Error('Should not have resolved');
+      },
+      err => err
+    );
+
+  expect(err).toMatchSnapshot();
+});

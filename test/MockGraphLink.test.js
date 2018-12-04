@@ -120,3 +120,63 @@ it('handles null results', async () => {
     greeting: null,
   });
 });
+
+it('handles arrays', async () => {
+  const query = gql`
+    query MyQuery {
+      userById(id: "123") {
+        id
+        name
+        posts {
+          id
+          message
+          likes
+        }
+      }
+    }
+  `;
+  const mockGraph = {
+    Query: {
+      userById: args => {
+        expect(args.id).toBe('123');
+        return {
+          __typename: 'User',
+          id: '123',
+          name: 'Bob',
+          posts: [
+            { __typename: 'Post', id: '1', message: 'Hello world!', likes: 10 },
+            { __typename: 'Post', id: '2', message: 'cat.gif', likes: 15 },
+            {
+              __typename: 'Post',
+              id: '3',
+              message: 'Hot take: Die Hard is the best Christmas movie',
+              likes: 3,
+            },
+          ],
+        };
+      },
+    },
+  };
+  const link = new MockGraphLink(() => mockGraph);
+  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+  const result = await client.query({
+    query,
+  });
+  expect(result.data).toEqual({
+    userById: {
+      __typename: 'User',
+      id: '123',
+      name: 'Bob',
+      posts: [
+        { __typename: 'Post', id: '1', message: 'Hello world!', likes: 10 },
+        { __typename: 'Post', id: '2', message: 'cat.gif', likes: 15 },
+        {
+          __typename: 'Post',
+          id: '3',
+          message: 'Hot take: Die Hard is the best Christmas movie',
+          likes: 3,
+        },
+      ],
+    },
+  });
+});

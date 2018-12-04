@@ -1,5 +1,27 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`handles a lot of errors 1`] = `
+[Error: GraphQL error: Field is missing
+GraphQL error: Field is missing
+GraphQL error: Field is missing
+GraphQL error: Field is missing
+GraphQL error: Field is missing
+GraphQL error: Field is missing
+GraphQL error: Field is missing
+GraphQL error: Field is missing
+GraphQL error: Field is missing
+GraphQL error: Field is missing
+GraphQL error: Field is missing
+GraphQL error: Field is missing
+GraphQL error: Field is missing
+GraphQL error: Field is missing
+GraphQL error: Field is missing
+GraphQL error: Field is missing
+GraphQL error: Field is missing
+GraphQL error: Field is missing
+GraphQL error: Field is missing]
+`;
+
 exports[`handles an exception in a resolver 1`] = `[Error: GraphQL error: Error from resolver with args {"id":"123"}: args.explode is not a function]`;
 
 exports[`reports a field that needs to be mocked with a function 1`] = `[Error: GraphQL error: This field received args ({"id":"123"}) and thus must be mocked as a function.]`;
