@@ -7,16 +7,6 @@ class MockGraphLink extends ApolloLink {
     this.getMockGraph = getMockGraph;
   }
 
-  assertNoUnusedMocks() {
-    if (this.mocks.length) {
-      throw new Error(
-        `Unused mocks for operations ${this.mocks
-          .map(m => m.operationName)
-          .join(', ')}`
-      );
-    }
-  }
-
   request(operation, forward) {
     const operationDefinitions = operation.query.definitions;
     const matchedOperationDefinition = operationDefinitions.find(
@@ -28,6 +18,13 @@ class MockGraphLink extends ApolloLink {
       rootValue = this.getMockGraph().Query;
       if (!rootValue) {
         throw new Error('Query must be mocked to fulfill a "query" operation');
+      }
+    } else if (matchedOperationDefinition.operation === 'mutation') {
+      rootValue = this.getMockGraph().Mutation;
+      if (!rootValue) {
+        throw new Error(
+          'Mutation must be mocked to fulfill a "mutation" operation'
+        );
       }
     } else {
       throw new Error(

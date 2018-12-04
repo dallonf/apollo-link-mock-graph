@@ -4,12 +4,12 @@ import gql from 'graphql-tag';
 import MockGraphLink from '../src/MockGraphLink';
 
 it('mocks a query', async () => {
-  const mockData = {
+  const mockGraph = {
     Query: {
       greeting: 'Hello, World!',
     },
   };
-  const link = new MockGraphLink(() => mockData);
+  const link = new MockGraphLink(() => mockGraph);
   const client = new ApolloClient({ link, cache: new InMemoryCache() });
 
   const query = gql`
@@ -29,12 +29,12 @@ it('mocks a query', async () => {
 });
 
 it('mocks a query with arguments', async () => {
-  const mockData = {
+  const mockGraph = {
     Query: {
       greeting: args => `Hello, ${args.name}!`,
     },
   };
-  const link = new MockGraphLink(() => mockData);
+  const link = new MockGraphLink(() => mockGraph);
   const client = new ApolloClient({ link, cache: new InMemoryCache() });
 
   const query = gql`
@@ -49,5 +49,45 @@ it('mocks a query with arguments', async () => {
 
   expect(result.data).toEqual({
     greeting: 'Hello, Bob!',
+  });
+});
+
+it('mocks a mutation', async () => {
+  const mockGraph = {
+    Mutation: {
+      updateUser: args => {
+        return {
+          __typename: 'User',
+          id: args.id,
+          name: args.name || 'Joe',
+          email: 'test@test.com',
+        };
+      },
+    },
+  };
+  const link = new MockGraphLink(() => mockGraph);
+  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+
+  const mutation = gql`
+    mutation MyMutation($id: ID!, $name: String) {
+      updateUser(id: $id, name: $name) {
+        id
+        name
+        email
+      }
+    }
+  `;
+  const result = await client.mutate({
+    mutation,
+    variables: { id: '123', name: 'Joe' },
+  });
+
+  expect(result.data).toEqual({
+    updateUser: {
+      __typename: 'User',
+      id: '123',
+      name: 'Joe',
+      email: 'test@test.com',
+    },
   });
 });
