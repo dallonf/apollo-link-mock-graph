@@ -4295,13 +4295,6 @@ graceful-fs@^4.0.0, graceful-fs@^4.1.10, graceful-fs@^4.1.11, graceful-fs@^4.1.2
   resolved "https://registry.yarnpkg.com/graceful-readlink/-/graceful-readlink-1.0.1.tgz#4cafad76bc62f02fa039b2f94e9a3dd3a391a725"
   integrity sha1-TK+tdrxi8C+gObL5Tpo906ORpyU=
 
-graphql-anywhere@^4.1.23:
-  version "4.1.23"
-  resolved "https://registry.yarnpkg.com/graphql-anywhere/-/graphql-anywhere-4.1.23.tgz#4275b161432b7c60a36970a1d9840d8c5cc2516e"
-  integrity sha512-8wtmwxWmLzAy52Z4WAw9UiYZ4ViiNXM+2DMOSlg2F7WsVstD0v75uOjCLJQUvbld5kHrgzTxter/THFVkGL+Yw==
-  dependencies:
-    apollo-utilities "^1.0.26"
-
 graphql-tag@^2.10.0:
   version "2.10.0"
   resolved "https://registry.yarnpkg.com/graphql-tag/-/graphql-tag-2.10.0.tgz#87da024be863e357551b2b8700e496ee2d4353ae"
