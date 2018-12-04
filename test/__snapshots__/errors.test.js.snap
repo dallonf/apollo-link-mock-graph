@@ -1,31 +1,31 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`handles a lot of errors 1`] = `
-[Error: GraphQL error: Field is missing
-GraphQL error: Field is missing
-GraphQL error: Field is missing
-GraphQL error: Field is missing
-GraphQL error: Field is missing
-GraphQL error: Field is missing
-GraphQL error: Field is missing
-GraphQL error: Field is missing
-GraphQL error: Field is missing
-GraphQL error: Field is missing
-GraphQL error: Field is missing
-GraphQL error: Field is missing
-GraphQL error: Field is missing
-GraphQL error: Field is missing
-GraphQL error: Field is missing
-GraphQL error: Field is missing
-GraphQL error: Field is missing
-GraphQL error: Field is missing
-GraphQL error: Field is missing]
+[Error: GraphQL error: userById({"id":"123"}).id: Field is missing from mock graph
+GraphQL error: userById({"id":"123"}).firstName: Field is missing from mock graph
+GraphQL error: userById({"id":"123"}).lastName: Field is missing from mock graph
+GraphQL error: userById({"id":"123"}).posts[0].id: Field is missing from mock graph
+GraphQL error: userById({"id":"123"}).posts[0].message: Field is missing from mock graph
+GraphQL error: userById({"id":"123"}).posts[0].date: Field is missing from mock graph
+GraphQL error: userById({"id":"123"}).posts[0].likes: Field is missing from mock graph
+GraphQL error: userById({"id":"123"}).posts[0].__typename: Field is missing from mock graph
+GraphQL error: userById({"id":"123"}).posts[1].id: Field is missing from mock graph
+GraphQL error: userById({"id":"123"}).posts[1].message: Field is missing from mock graph
+GraphQL error: userById({"id":"123"}).posts[1].date: Field is missing from mock graph
+GraphQL error: userById({"id":"123"}).posts[1].likes: Field is missing from mock graph
+GraphQL error: userById({"id":"123"}).posts[1].__typename: Field is missing from mock graph
+GraphQL error: userById({"id":"123"}).posts[2].id: Field is missing from mock graph
+GraphQL error: userById({"id":"123"}).posts[2].message: Field is missing from mock graph
+GraphQL error: userById({"id":"123"}).posts[2].date: Field is missing from mock graph
+GraphQL error: userById({"id":"123"}).posts[2].likes: Field is missing from mock graph
+GraphQL error: userById({"id":"123"}).posts[2].__typename: Field is missing from mock graph
+GraphQL error: userById({"id":"123"}).__typename: Field is missing from mock graph]
 `;
 
-exports[`handles an exception in a resolver 1`] = `[Error: GraphQL error: Error from resolver with args {"id":"123"}: args.explode is not a function]`;
+exports[`handles an exception in a resolver 1`] = `[Error: GraphQL error: userById({"id":"123"}): Error from resolver: args.explode is not a function]`;
 
-exports[`reports a field that needs to be mocked with a function 1`] = `[Error: GraphQL error: This field received args ({"id":"123"}) and thus must be mocked as a function.]`;
+exports[`reports a field that needs to be mocked with a function 1`] = `[Error: GraphQL error: userById({"id":"123"}): This field received args and thus must be mocked as a function.]`;
 
-exports[`reports a function that returns undefined 1`] = `[Error: GraphQL error: Mock resolver returned undefined for args {"id":"123"}; did you mean to return null?]`;
+exports[`reports a function that returns undefined 1`] = `[Error: GraphQL error: userById({"id":"123"}): Mock resolver returned undefined; did you mean to return null?]`;
 
-exports[`reports a missing field in the mock 1`] = `[Error: GraphQL error: Field is missing]`;
+exports[`reports a missing field in the mock 1`] = `[Error: GraphQL error: userById({"id":"123"}).name: Field is missing from mock graph]`;

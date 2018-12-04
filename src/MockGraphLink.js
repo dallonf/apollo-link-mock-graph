@@ -9,6 +9,7 @@ import {
   isInlineFragment,
   argumentsObjectFromField,
 } from 'apollo-utilities';
+import formatPath from './formatPath';
 
 /// copied from graphql-anywhere
 export function merge(dest, src) {
@@ -117,7 +118,10 @@ class MockGraphLink extends ApolloLink {
       const fieldName = field.name.value;
       const args = argumentsObjectFromField(field, operation.variables);
 
-      const path = [...currentPath, fieldName];
+      const path = [
+        ...currentPath,
+        args ? `${fieldName}(${JSON.stringify(args)})` : fieldName,
+      ];
 
       const mockedValue = rootValue[fieldName];
       let result;
@@ -207,32 +211,28 @@ class MockGraphLink extends ApolloLink {
       []
     );
 
+    const formattedErrors = errors.length
+      ? errors.map(e => {
+          let message = e.type;
+          if (e.type === 'missing') {
+            message = `Field is missing from mock graph`;
+          } else if (e.type === 'fnReturnUndefined') {
+            message = `Mock resolver returned undefined; did you mean to return null?`;
+          } else if (e.type === 'scalarWithArgs') {
+            message = `This field received args and thus must be mocked as a function.`;
+          } else if (e.type === 'resolver') {
+            message = `Error from resolver: ${e.error.message}`;
+          }
+          message = `${formatPath(e.path)}: ${message}`;
+          return {
+            message,
+            path: e.path,
+          };
+        })
+      : null;
+
     return new Observable(sub => {
       const timeout = setTimeout(() => {
-        const formattedErrors = errors.length
-          ? errors.map(e => {
-              let message = e.type;
-              if (e.type === 'missing') {
-                message = 'Field is missing';
-              } else if (e.type === 'fnReturnUndefined') {
-                message = `Mock resolver returned undefined for args ${JSON.stringify(
-                  e.args
-                )}; did you mean to return null?`;
-              } else if (e.type === 'scalarWithArgs') {
-                message = `This field received args (${JSON.stringify(
-                  e.args
-                )}) and thus must be mocked as a function.`;
-              } else if (e.type === 'resolver') {
-                message = `Error from resolver with args ${JSON.stringify(
-                  e.args
-                )}: ${e.error.message}`;
-              }
-              return {
-                message,
-                path: e.path,
-              };
-            })
-          : null;
         sub.next({ data: result, errors: formattedErrors });
         sub.complete();
       }, 100);
