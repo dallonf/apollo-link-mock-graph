@@ -225,3 +225,37 @@ it('reports a field that needs to be mocked with a function', async () => {
 
   expect(err).toMatchSnapshot();
 });
+
+it('handles an exception in a resolver', async () => {
+  const mockGraph = {
+    Query: {
+      userById: args => {
+        return args.explode();
+      },
+    },
+  };
+  const link = new MockGraphLink(() => mockGraph);
+  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+
+  const query = gql`
+    query MyQuery {
+      userById(id: "123") {
+        id
+        name
+      }
+    }
+  `;
+
+  const err = await client
+    .query({
+      query,
+    })
+    .then(
+      () => {
+        throw new Error('Should not have resolved');
+      },
+      err => err
+    );
+
+  expect(err).toMatchSnapshot();
+});

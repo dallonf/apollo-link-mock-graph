@@ -64,7 +64,9 @@ class MockGraphLink extends ApolloLink {
     const fragments = getFragmentDefinitions(operation.query);
     const fragmentMap = createFragmentMap(fragments);
 
-    const executeSelectionSet = (selectionSet, rootValue) => {
+    const errors = [];
+
+    const executeSelectionSet = (selectionSet, rootValue, currentPath) => {
       const result = {};
       selectionSet.selections.forEach(selection => {
         if (!shouldInclude(selectionSet, operation.variables)) {
@@ -73,7 +75,7 @@ class MockGraphLink extends ApolloLink {
         }
 
         if (isField(selection)) {
-          const fieldResult = executeField(selection, rootValue);
+          const fieldResult = executeField(selection, rootValue, currentPath);
 
           const resultFieldKey = resultKeyNameFromField(selection);
 
@@ -100,7 +102,8 @@ class MockGraphLink extends ApolloLink {
 
           const fragmentResult = executeSelectionSet(
             fragment.selectionSet,
-            rootValue
+            rootValue,
+            currentPath
           );
 
           merge(result, fragmentResult);
@@ -110,35 +113,37 @@ class MockGraphLink extends ApolloLink {
       return result;
     };
 
-    const executeField = (field, rootValue) => {
+    const executeField = (field, rootValue, currentPath) => {
       const fieldName = field.name.value;
       const args = argumentsObjectFromField(field, operation.variables);
+
+      const path = [...currentPath, fieldName];
 
       const mockedValue = rootValue[fieldName];
       let result;
       if (mockedValue === undefined) {
-        throw new Error(
-          `Value for field ${fieldName} is missing in query ${
-            operation.operationName
-          }`
-        );
-      }
-      if (mockedValue === undefined) {
-        throw new Error(
-          `Value for field ${fieldName} is missing in query ${
-            operation.operationName
-          }`
-        );
+        errors.push({
+          type: 'missing',
+          path,
+        });
+        result = null;
       } else if (typeof mockedValue === 'function') {
-        const resolvedValue = mockedValue(args || {});
-        if (resolvedValue === undefined) {
-          throw new Error(
-            `Resolver for field ${fieldName} in query ${
-              operation.operationName
-            } returned undefined for arguments ${JSON.stringify(
-              args
-            )}. If null is intended, return it explicitly.`
-          );
+        let resolvedValue, executionError;
+        try {
+          resolvedValue = mockedValue(args || {});
+        } catch (err) {
+          executionError = err;
+        }
+        if (executionError) {
+          errors.push({ type: 'resolver', error: executionError, args, path });
+          result = null;
+        } else if (resolvedValue === undefined) {
+          errors.push({
+            type: 'fnReturnUndefined',
+            args,
+            path,
+          });
+          result = null;
         } else {
           result = resolvedValue;
         }
@@ -147,13 +152,12 @@ class MockGraphLink extends ApolloLink {
         Object.keys(args).length &&
         typeof mockedValue !== 'function'
       ) {
-        throw new Error(
-          `Field ${fieldName} in query ${
-            operation.operationName
-          } takes arguments (${JSON.stringify(
-            args
-          )}), so it must be mocked as a function`
-        );
+        errors.push({
+          type: 'scalarWithArgs',
+          args,
+          path,
+        });
+        result = null;
       } else {
         result = mockedValue;
       }
@@ -171,35 +175,65 @@ class MockGraphLink extends ApolloLink {
       }
 
       if (Array.isArray(result)) {
-        return executeSubSelectedArray(field, result);
+        return executeSubSelectedArray(field, result, path);
       }
 
       // Returned value is an object, and the query has a sub-selection. Recurse.
-      return executeSelectionSet(field.selectionSet, result);
+      return executeSelectionSet(field.selectionSet, result, path);
     };
 
-    const executeSubSelectedArray = (field, result) => {
-      return result.map(item => {
+    const executeSubSelectedArray = (field, result, currentPath) => {
+      return result.map((item, i) => {
         // null value in array
         if (item === null) {
           return null;
         }
 
+        const path = [...currentPath, i];
+
         // This is a nested array, recurse
         if (Array.isArray(item)) {
-          return executeSubSelectedArray(field, item);
+          return executeSubSelectedArray(field, item, path);
         }
 
         // This is an object, run the selection set on it
-        return executeSelectionSet(field.selectionSet, item);
+        return executeSelectionSet(field.selectionSet, item, path);
       });
     };
 
-    const result = executeSelectionSet(mainDefinition.selectionSet, rootValue);
+    const result = executeSelectionSet(
+      mainDefinition.selectionSet,
+      rootValue,
+      []
+    );
 
     return new Observable(sub => {
       const timeout = setTimeout(() => {
-        sub.next({ data: result });
+        const formattedErrors = errors.length
+          ? errors.map(e => {
+              let message = e.type;
+              if (e.type === 'missing') {
+                message = 'Field is missing';
+              } else if (e.type === 'fnReturnUndefined') {
+                message = `Mock resolver returned undefined for args ${JSON.stringify(
+                  e.args
+                )}; did you mean to return null?`;
+              } else if (e.type === 'scalarWithArgs') {
+                message = `This field received args (${JSON.stringify(
+                  e.args
+                )}) and thus must be mocked as a function.`;
+              } else if (e.type === 'resolver') {
+                message = `Error from resolver with args ${JSON.stringify(
+                  e.args
+                )}: ${e.error.message}`;
+              }
+              return {
+                message,
+                path: e.path,
+              };
+            })
+          : null;
+        sub.next({ data: result, errors: formattedErrors });
         sub.complete();
       }, 100);
       return () => clearTimeout(timeout);

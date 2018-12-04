@@ -1,7 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`reports a field that needs to be mocked with a function 1`] = `[Error: Network error: Field userById in query MyQuery takes arguments ({"id":"123"}), so it must be mocked as a function]`;
+exports[`handles an exception in a resolver 1`] = `[Error: GraphQL error: Error from resolver with args {"id":"123"}: args.explode is not a function]`;
 
-exports[`reports a function that returns undefined 1`] = `[Error: Network error: Resolver for field userById in query MyQuery returned undefined for arguments {"id":"123"}. If null is intended, return it explicitly.]`;
+exports[`reports a field that needs to be mocked with a function 1`] = `[Error: GraphQL error: This field received args ({"id":"123"}) and thus must be mocked as a function.]`;
 
-exports[`reports a missing field in the mock 1`] = `[Error: Network error: Value for field name is missing in query MyQuery]`;
+exports[`reports a function that returns undefined 1`] = `[Error: GraphQL error: Mock resolver returned undefined for args {"id":"123"}; did you mean to return null?]`;
+
+exports[`reports a missing field in the mock 1`] = `[Error: GraphQL error: Field is missing]`;
