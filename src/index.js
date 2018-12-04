@@ -1,1 +1,2 @@
-export default () => 'Welcome to apollo-link-mock-graph';
+import MockGraphLink from './MockGraphLink';
+export default MockGraphLink;
