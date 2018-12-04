@@ -3,6 +3,15 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 import gql from 'graphql-tag';
 import MockGraphLink from '../src/MockGraphLink';
 
+const createClient = getMockGraph => {
+  const onError = jest.fn();
+  const link = new MockGraphLink(getMockGraph, {
+    onError,
+  });
+  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+  return { client, onError };
+};
+
 it('reports a missing field in the mock', async () => {
   const mockGraph = {
     Query: {
@@ -15,8 +24,7 @@ it('reports a missing field in the mock', async () => {
       },
     },
   };
-  const link = new MockGraphLink(() => mockGraph);
-  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+  const { client, onError } = createClient(() => mockGraph);
 
   const query = gql`
     query MyQuery {
@@ -39,6 +47,8 @@ it('reports a missing field in the mock', async () => {
     );
 
   expect(err).toMatchSnapshot();
+  expect(onError).toHaveBeenCalledTimes(1);
+  expect(onError.mock.calls[0]).toMatchSnapshot();
 });
 
 it('reports a function that returns undefined', async () => {
@@ -47,8 +57,7 @@ it('reports a function that returns undefined', async () => {
       userById: args => {},
     },
   };
-  const link = new MockGraphLink(() => mockGraph);
-  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+  const { client, onError } = createClient(() => mockGraph);
 
   const query = gql`
     query MyQuery {
@@ -71,6 +80,8 @@ it('reports a function that returns undefined', async () => {
     );
 
   expect(err).toMatchSnapshot();
+  expect(onError).toHaveBeenCalledTimes(1);
+  expect(onError.mock.calls[0]).toMatchSnapshot();
 });
 
 it('reports a field that needs to be mocked with a function', async () => {
@@ -82,8 +93,7 @@ it('reports a field that needs to be mocked with a function', async () => {
       },
     },
   };
-  const link = new MockGraphLink(() => mockGraph);
-  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+  const { client, onError } = createClient(() => mockGraph);
 
   const query = gql`
     query MyQuery {
@@ -106,6 +116,8 @@ it('reports a field that needs to be mocked with a function', async () => {
     );
 
   expect(err).toMatchSnapshot();
+  expect(onError).toHaveBeenCalledTimes(1);
+  expect(onError.mock.calls[0]).toMatchSnapshot();
 });
 
 it('handles an exception in a resolver', async () => {
@@ -116,8 +128,7 @@ it('handles an exception in a resolver', async () => {
       },
     },
   };
-  const link = new MockGraphLink(() => mockGraph);
-  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+  const { client, onError } = createClient(() => mockGraph);
 
   const query = gql`
     query MyQuery {
@@ -140,6 +151,8 @@ it('handles an exception in a resolver', async () => {
     );
 
   expect(err).toMatchSnapshot();
+  expect(onError).toHaveBeenCalledTimes(1);
+  expect(onError.mock.calls[0]).toMatchSnapshot();
 });
 
 it('handles a lot of errors', async () => {
@@ -168,8 +181,7 @@ it('handles a lot of errors', async () => {
       },
     },
   };
-  const link = new MockGraphLink(() => mockGraph);
-  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+  const { client, onError } = createClient(() => mockGraph);
 
   const err = await client
     .query({
@@ -183,4 +195,6 @@ it('handles a lot of errors', async () => {
     );
 
   expect(err).toMatchSnapshot();
+  expect(onError).toHaveBeenCalledTimes(1);
+  expect(onError.mock.calls[0]).toMatchSnapshot();
 });

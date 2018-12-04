@@ -10,6 +10,7 @@ import {
   argumentsObjectFromField,
 } from 'apollo-utilities';
 import formatPath from './formatPath';
+import defaultOnError from './defaultOnError';
 
 /// copied from graphql-anywhere
 export function merge(dest, src) {
@@ -26,9 +27,11 @@ export function merge(dest, src) {
 }
 
 class MockGraphLink extends ApolloLink {
-  constructor(getMockGraph) {
+  constructor(getMockGraph, opts = {}) {
     super();
+    const { onError = defaultOnError } = opts;
     this.getMockGraph = getMockGraph;
+    this.onError = onError;
   }
 
   request(operation, forward) {
@@ -225,11 +228,15 @@ class MockGraphLink extends ApolloLink {
           }
           message = `${formatPath(e.path)}: ${message}`;
           return {
+            ...e,
             message,
-            path: e.path,
           };
         })
       : null;
+
+    if (errors.length) {
+      this.onError(formattedErrors, operation.query);
+    }
 
     return new Observable(sub => {
       const timeout = setTimeout(() => {

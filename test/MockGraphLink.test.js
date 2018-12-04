@@ -3,14 +3,22 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 import gql from 'graphql-tag';
 import MockGraphLink from '../src/MockGraphLink';
 
+const createClient = getMockGraph => {
+  const onError = jest.fn();
+  const link = new MockGraphLink(getMockGraph, {
+    onError,
+  });
+  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+  return { client, onError };
+};
+
 it('mocks a query', async () => {
   const mockGraph = {
     Query: {
       greeting: 'Hello, World!',
     },
   };
-  const link = new MockGraphLink(() => mockGraph);
-  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+  const { client, onError } = createClient(() => mockGraph);
 
   const query = gql`
     query MyQuery($name: String) {
@@ -26,6 +34,7 @@ it('mocks a query', async () => {
   expect(result.data).toEqual({
     greeting: 'Hello, World!',
   });
+  expect(onError).not.toHaveBeenCalled();
 });
 
 it('mocks a query with arguments', async () => {
@@ -34,8 +43,7 @@ it('mocks a query with arguments', async () => {
       greeting: args => `Hello, ${args.name}!`,
     },
   };
-  const link = new MockGraphLink(() => mockGraph);
-  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+  const { client, onError } = createClient(() => mockGraph);
 
   const query = gql`
     query MyQuery($name: String) {
@@ -50,6 +58,7 @@ it('mocks a query with arguments', async () => {
   expect(result.data).toEqual({
     greeting: 'Hello, Bob!',
   });
+  expect(onError).not.toHaveBeenCalled();
 });
 
 it('mocks a mutation', async () => {
@@ -65,8 +74,7 @@ it('mocks a mutation', async () => {
       },
     },
   };
-  const link = new MockGraphLink(() => mockGraph);
-  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+  const { client, onError } = createClient(() => mockGraph);
 
   const mutation = gql`
     mutation MyMutation($id: ID!, $name: String) {
@@ -90,6 +98,7 @@ it('mocks a mutation', async () => {
       email: 'test@test.com',
     },
   });
+  expect(onError).not.toHaveBeenCalled();
 });
 
 it('handles null results', async () => {
@@ -99,8 +108,7 @@ it('handles null results', async () => {
       greeting: null,
     },
   };
-  const link = new MockGraphLink(() => mockGraph);
-  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+  const { client, onError } = createClient(() => mockGraph);
 
   const query = gql`
     query MyQuery {
@@ -119,6 +127,7 @@ it('handles null results', async () => {
     userById: null,
     greeting: null,
   });
+  expect(onError).not.toHaveBeenCalled();
 });
 
 it('handles arrays', async () => {
@@ -157,8 +166,7 @@ it('handles arrays', async () => {
       },
     },
   };
-  const link = new MockGraphLink(() => mockGraph);
-  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+  const { client, onError } = createClient(() => mockGraph);
   const result = await client.query({
     query,
   });
@@ -179,4 +187,5 @@ it('handles arrays', async () => {
       ],
     },
   });
+  expect(onError).not.toHaveBeenCalled();
 });
