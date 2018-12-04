@@ -91,3 +91,137 @@ it('mocks a mutation', async () => {
     },
   });
 });
+
+it('reports a missing field in the mock', async () => {
+  const mockGraph = {
+    Query: {
+      userById: args => {
+        expect(args.id).toBe('123');
+        return {
+          __typename: 'User',
+          id: '123',
+        };
+      },
+    },
+  };
+  const link = new MockGraphLink(() => mockGraph);
+  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+
+  const query = gql`
+    query MyQuery {
+      userById(id: "123") {
+        id
+        name
+      }
+    }
+  `;
+
+  const err = await client
+    .query({
+      query,
+    })
+    .then(
+      () => {
+        throw new Error('Should not have resolved');
+      },
+      err => err
+    );
+
+  expect(err).toMatchSnapshot();
+});
+
+it('handles null results', async () => {
+  const mockGraph = {
+    Query: {
+      userById: args => null,
+      greeting: null,
+    },
+  };
+  const link = new MockGraphLink(() => mockGraph);
+  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+
+  const query = gql`
+    query MyQuery {
+      userById(id: "123") {
+        id
+        name
+      }
+      greeting
+    }
+  `;
+
+  const result = await client.query({
+    query,
+  });
+  expect(result.data).toEqual({
+    userById: null,
+    greeting: null,
+  });
+});
+
+it('reports a function that returns undefined', async () => {
+  const mockGraph = {
+    Query: {
+      userById: args => {},
+    },
+  };
+  const link = new MockGraphLink(() => mockGraph);
+  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+
+  const query = gql`
+    query MyQuery {
+      userById(id: "123") {
+        id
+        name
+      }
+    }
+  `;
+
+  const err = await client
+    .query({
+      query,
+    })
+    .then(
+      () => {
+        throw new Error('Should not have resolved');
+      },
+      err => err
+    );
+
+  expect(err).toMatchSnapshot();
+});
+
+it('reports a field that needs to be mocked with a function', async () => {
+  const mockGraph = {
+    Query: {
+      userById: {
+        id: '123',
+        name: 'Bob',
+      },
+    },
+  };
+  const link = new MockGraphLink(() => mockGraph);
+  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+
+  const query = gql`
+    query MyQuery {
+      userById(id: "123") {
+        id
+        name
+      }
+    }
+  `;
+
+  const err = await client
+    .query({
+      query,
+    })
+    .then(
+      () => {
+        throw new Error('Should not have resolved');
+      },
+      err => err
+    );
+
+  expect(err).toMatchSnapshot();
+});

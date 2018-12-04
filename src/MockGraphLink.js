@@ -9,8 +9,10 @@ class MockGraphLink extends ApolloLink {
 
   request(operation, forward) {
     const operationDefinitions = operation.query.definitions;
-    const matchedOperationDefinition = operationDefinitions.find(
-      o => o.name.value === operation.operationName
+    const matchedOperationDefinition = operationDefinitions.find(o =>
+      operation.operationName === null
+        ? o.name == null
+        : o.name.value === operation.operationName
     );
 
     let rootValue;
