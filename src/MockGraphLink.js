@@ -160,7 +160,7 @@ class MockGraphLink extends ApolloLink {
         typeof mockedValue !== 'function'
       ) {
         errors.push({
-          type: 'scalarWithArgs',
+          type: 'fnRequired',
           args,
           path,
         });
@@ -221,7 +221,7 @@ class MockGraphLink extends ApolloLink {
             message = `Field is missing from mock graph`;
           } else if (e.type === 'fnReturnUndefined') {
             message = `Mock resolver returned undefined; did you mean to return null?`;
-          } else if (e.type === 'scalarWithArgs') {
+          } else if (e.type === 'fnRequired') {
             message = `This field received args and thus must be mocked as a function.`;
           } else if (e.type === 'resolver') {
             message = `Error from resolver: ${e.error.message}`;
