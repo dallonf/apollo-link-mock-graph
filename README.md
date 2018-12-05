@@ -122,6 +122,29 @@ type MockGraphError =
     };
 ```
 
+### MockGraph
+
+```ts
+type MockGraph = {
+  Query?: MockGraphObject;
+  Mutation?: MockGraphObject;
+};
+
+type MockGraphObject = {
+  [fieldName: string]:
+    | MockGraphField
+    | ((args: object) => MockGraphField | undefined);
+};
+
+type MockGraphField =
+  | null
+  | string
+  | number
+  | boolean
+  | MockGraphObject
+  | MockGraphObject[];
+```
+
 ## Recipes
 
 ### Using with Cypress
