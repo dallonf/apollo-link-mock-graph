@@ -1,6 +1,6 @@
 # Apollo MockGraphLink
 
-An [Apollo Link] that resolves incoming queries from a loosely typed mock graph in memory. Useful for integration tests where you want to abstract away a full GraphQL server and provide dummy data tailored for that test.
+An [Apollo Link](https://www.apollographql.com/docs/link/) that resolves incoming queries from a loosely typed mock graph in memory. Useful for integration tests where you want to abstract away a full GraphQL server and provide dummy data tailored for that test.
 
 ## Usage
 
