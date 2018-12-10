@@ -1,5 +1,7 @@
 # Apollo MockGraphLink
 
+[![Build Status](https://travis-ci.org/dallonf/apollo-link-mock-graph.svg?branch=master)](https://travis-ci.org/dallonf/apollo-link-mock-graph)
+
 An [Apollo Link](https://www.apollographql.com/docs/link/) that resolves incoming queries from a loosely typed mock graph in memory. Useful for integration tests where you want to abstract away a full GraphQL server and provide dummy data tailored for that test.
 
 ## Usage
