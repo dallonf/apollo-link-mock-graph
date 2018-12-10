@@ -80,7 +80,7 @@ The first argument is required; it is a function that returns a reference to the
 
 This function is called when an error occurs while resolving a query from the mock graph. Usually this is because the mock graph doesn't have enough data to satisfy the query! You can use this function to report the errors to your test runner to help you debug your tests.
 
-By default, this will print the query and errors to `console.error`. You can also pass a no-op function to supress this behavior.
+By default, this will print the query and errors to `console.error`. You can also pass a no-op function to suppress this behavior.
 
 ### MockGraphError
 
