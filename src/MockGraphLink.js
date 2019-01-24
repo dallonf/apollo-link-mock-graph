@@ -104,13 +104,39 @@ class MockGraphLink extends ApolloLink {
             }
           }
 
-          const fragmentResult = executeSelectionSet(
-            fragment.selectionSet,
-            rootValue,
-            currentPath
-          );
+          let fragmentType;
+          if (
+            fragment.typeCondition &&
+            fragment.typeCondition.kind === 'NamedType' &&
+            fragment.typeCondition.name.kind === 'Name'
+          ) {
+            fragmentType = fragment.typeCondition.name.value;
+          }
+          const objectType = rootValue.__typename;
+          if (!objectType) {
+            errors.push({
+              type: 'noTypename',
+              path: currentPath,
+              fragmentName: fragment.name.value,
+            });
+          } else if (fragmentType === objectType) {
+            // only execute the fragment if it is the correct type
+            const fragmentResult = executeSelectionSet(
+              fragment.selectionSet,
+              rootValue,
+              currentPath
+            );
 
-          merge(result, fragmentResult);
+            merge(result, fragmentResult);
+          } else {
+            errors.push({
+              type: 'unionInterfaceTypes',
+              path: currentPath,
+              fragmentName: fragment.name.value,
+              objectType,
+              fragmentType,
+            });
+          }
         }
       });
 
@@ -225,6 +251,18 @@ class MockGraphLink extends ApolloLink {
             message = `This field received args and thus must be mocked as a function.`;
           } else if (e.type === 'resolver') {
             message = `Error from resolver: ${e.error.message}`;
+          } else if (e.type === 'noTypename') {
+            message = `Can't resolve fragment ${
+              e.fragmentName
+            } because __typename is missing from the mock graph`;
+          } else if (e.type === 'unionInterfaceTypes') {
+            message = `Can't resolve fragment ${
+              e.fragmentName
+            } because its type (${
+              e.fragmentType
+            }) might not match the object's type (${
+              e.objectType
+            }). See https://github.com/dallonf/apollo-link-mock-graph/blob/master/README.md for how to handle union and interface types.`;
           }
           message = `${formatPath(e.path)}: ${message}`;
           return {
