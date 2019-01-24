@@ -29,9 +29,30 @@ export function merge(dest, src) {
 class MockGraphLink extends ApolloLink {
   constructor(getMockGraph, opts = {}) {
     super();
-    const { onError = defaultOnError } = opts;
+    const {
+      onError = defaultOnError,
+      fragmentIntrospectionQueryResultData,
+    } = opts;
     this.getMockGraph = getMockGraph;
     this.onError = onError;
+
+    if (fragmentIntrospectionQueryResultData) {
+      this.fragmentTypeMap = this.parseFragmentIntrospectionResult(
+        fragmentIntrospectionQueryResultData
+      );
+    }
+  }
+
+  parseFragmentIntrospectionResult(introspectionResultData) {
+    const typeMap = {};
+    introspectionResultData.__schema.types.forEach(type => {
+      if (type.kind === 'UNION' || type.kind === 'INTERFACE') {
+        typeMap[type.name] = type.possibleTypes.map(
+          implementingType => implementingType.name
+        );
+      }
+    });
+    return typeMap;
   }
 
   request(operation, forward) {
@@ -104,6 +125,17 @@ class MockGraphLink extends ApolloLink {
             }
           }
 
+          const executeFragment = () => {
+            // only execute the fragment if it is the correct type
+            const fragmentResult = executeSelectionSet(
+              fragment.selectionSet,
+              rootValue,
+              currentPath
+            );
+
+            merge(result, fragmentResult);
+          };
+
           let fragmentType;
           if (
             fragment.typeCondition &&
@@ -120,22 +152,23 @@ class MockGraphLink extends ApolloLink {
               fragmentName: fragment.name.value,
             });
           } else if (fragmentType === objectType) {
-            // only execute the fragment if it is the correct type
-            const fragmentResult = executeSelectionSet(
-              fragment.selectionSet,
-              rootValue,
-              currentPath
-            );
-
-            merge(result, fragmentResult);
+            executeFragment();
           } else {
-            errors.push({
-              type: 'unionInterfaceTypes',
-              path: currentPath,
-              fragmentName: fragment.name.value,
-              objectType,
-              fragmentType,
-            });
+            if (this.fragmentTypeMap) {
+              if (this.fragmentTypeMap[fragmentType] && this.fragmentTypeMap[fragmentType].indexOf(objectType) !== -1) {
+                executeFragment();
+              } else {
+                // the fragment isn't a matching type. Ignore.
+              }
+            } else {
+              errors.push({
+                type: 'unionInterfaceTypes',
+                path: currentPath,
+                fragmentName: fragment.name.value,
+                objectType,
+                fragmentType,
+              });
+            }
           }
         }
       });
@@ -262,7 +295,7 @@ class MockGraphLink extends ApolloLink {
               e.fragmentType
             }) might not match the object's type (${
               e.objectType
-            }). See https://github.com/dallonf/apollo-link-mock-graph/blob/master/README.md for how to handle union and interface types.`;
+            }). In order to hande union and interface types, you must pass \`fragmentIntrospectionQueryResultData\` when creating MockGraphLink. See https://github.com/dallonf/apollo-link-mock-graph/blob/master/README.md for details.`;
           }
           message = `${formatPath(e.path)}: ${message}`;
           return {

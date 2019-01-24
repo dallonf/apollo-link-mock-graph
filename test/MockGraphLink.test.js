@@ -10,6 +10,7 @@ const createClient = (getMockGraph, { introspectionQueryResultData } = {}) => {
   const onError = jest.fn();
   const link = new MockGraphLink(getMockGraph, {
     onError,
+    fragmentIntrospectionQueryResultData: introspectionQueryResultData,
   });
   const fragmentMatcher = introspectionQueryResultData
     ? new IntrospectionFragmentMatcher({
