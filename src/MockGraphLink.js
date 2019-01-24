@@ -43,6 +43,7 @@ class MockGraphLink extends ApolloLink {
     }
   }
 
+  // Modified version of https://github.com/apollographql/apollo-client/blob/b1ca2025d13a9a446be3b7fda2483767d3f61a6e/packages/apollo-cache-inmemory/src/fragmentMatcher.ts#L148
   parseFragmentIntrospectionResult(introspectionResultData) {
     const typeMap = {};
     introspectionResultData.__schema.types.forEach(type => {
@@ -155,7 +156,10 @@ class MockGraphLink extends ApolloLink {
             executeFragment();
           } else {
             if (this.fragmentTypeMap) {
-              if (this.fragmentTypeMap[fragmentType] && this.fragmentTypeMap[fragmentType].indexOf(objectType) !== -1) {
+              if (
+                this.fragmentTypeMap[fragmentType] &&
+                this.fragmentTypeMap[fragmentType].indexOf(objectType) !== -1
+              ) {
                 executeFragment();
               } else {
                 // the fragment isn't a matching type. Ignore.
