@@ -168,7 +168,7 @@ class MockGraphLink extends ApolloLink {
               errors.push({
                 type: 'unionInterfaceTypes',
                 path: currentPath,
-                fragmentName: fragment.name.value,
+                fragmentName: fragment.name && fragment.name.value,
                 objectType,
                 fragmentType,
               });
@@ -294,12 +294,12 @@ class MockGraphLink extends ApolloLink {
             } because __typename is missing from the mock graph`;
           } else if (e.type === 'unionInterfaceTypes') {
             message = `Can't resolve fragment ${
-              e.fragmentName
-            } because its type (${
+              e.fragmentName ? e.fragmentName + ' ' : ''
+            }because its type (${
               e.fragmentType
             }) might not match the object's type (${
               e.objectType
-            }). In order to hande union and interface types, you must pass \`fragmentIntrospectionQueryResultData\` when creating MockGraphLink. See https://github.com/dallonf/apollo-link-mock-graph/blob/master/README.md for details.`;
+            }). In order to handle union and interface types, you must pass \`fragmentIntrospectionQueryResultData\` when creating MockGraphLink. See https://github.com/dallonf/apollo-link-mock-graph/blob/master/README.md for details.`;
           }
           message = `${formatPath(e.path)}: ${message}`;
           return {
