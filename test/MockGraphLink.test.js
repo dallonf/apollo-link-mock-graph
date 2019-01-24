@@ -189,3 +189,74 @@ it('handles arrays', async () => {
   });
   expect(onError).not.toHaveBeenCalled();
 });
+
+it('handles inline fragments on type unions', async () => {
+  const query = gql`
+    {
+      posts {
+        id
+        title
+        ... on PhotoPost {
+          photoUrl
+        }
+        ... on VideoPost {
+          youtubeId
+        }
+        ... on TextPost {
+          body
+        }
+      }
+    }
+  `;
+  const expectedResult = {
+    posts: [
+      {
+        id: '1',
+        title: 'Need some help',
+        body:
+          'How much wood could a woodchuck chuck if woodchuck could chuck wood? Asking for a friend.',
+      },
+      {
+        id: '2',
+        title: 'Look at this cat!',
+        photoUrl: 'https://http.cat/503',
+      },
+      {
+        id: '3',
+        title: 'Check out this new single from my band',
+        youtubeId: 'dQw4w9WgXcQ',
+      },
+    ],
+  };
+  const mockGraph = {
+    Query: {
+      posts: [
+        {
+          __typename: 'TextPost',
+          id: '1',
+          title: 'Need some help',
+          body:
+            'How much wood could a woodchuck chuck if woodchuck could chuck wood? Asking for a friend.',
+        },
+        {
+          __typename: 'PhotoPost',
+          id: '2',
+          title: 'Look at this cat!',
+          photoUrl: 'https://http.cat/503',
+        },
+        {
+          __typename: 'VideoPost',
+          id: '3',
+          title: 'Check out this new single from my band',
+          youtubeId: 'dQw4w9WgXcQ',
+        },
+      ],
+    },
+  };
+  const { client, onError } = createClient(() => mockGraph);
+  const result = await client.query({
+    query,
+  });
+  expect(result.data).toEqual(expectedResult);
+  expect(onError).not.toHaveBeenCalled();
+});
