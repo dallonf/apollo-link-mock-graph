@@ -120,6 +120,86 @@ it('reports a field that needs to be mocked with a function', async () => {
   expect(onError.mock.calls[0]).toMatchSnapshot();
 });
 
+it('reports a fragment on an object without a typename', async () => {
+  const mockGraph = {
+    Query: {
+      currentUser: {
+        id: '123',
+        name: 'Bob',
+      },
+    },
+  };
+  const { client, onError } = createClient(() => mockGraph);
+
+  const query = gql`
+    query MyQuery {
+      currentUser {
+        id
+        ...UserView
+      }
+    }
+
+    fragment UserView on User {
+      name
+    }
+  `;
+
+  const err = await client
+    .query({
+      query,
+    })
+    .then(
+      () => {
+        throw new Error('Should not have resolved');
+      },
+      err => err
+    );
+
+  expect(err).toMatchSnapshot();
+  expect(onError).toHaveBeenCalledTimes(1);
+  expect(onError.mock.calls[0]).toMatchSnapshot();
+});
+
+it('fails on non-matching fragments without fragmentIntrospectionQueryResultData config', async () => {
+  const mockGraph = {
+    Query: {
+      currentUser: {
+        __typename: 'FreeUser',
+        id: '123',
+        name: 'Bob',
+      },
+    },
+  };
+  const { client, onError } = createClient(() => mockGraph);
+
+  const query = gql`
+    query MyQuery {
+      currentUser {
+        id
+        name
+        ... on PremiumUser {
+          nextPaymentDate
+        }
+      }
+    }
+  `;
+
+  const err = await client
+    .query({
+      query,
+    })
+    .then(
+      () => {
+        throw new Error('Should not have resolved');
+      },
+      err => err
+    );
+
+  expect(err).toMatchSnapshot();
+  expect(onError).toHaveBeenCalledTimes(1);
+  expect(onError.mock.calls[0]).toMatchSnapshot();
+});
+
 it('handles an exception in a resolver', async () => {
   const mockGraph = {
     Query: {

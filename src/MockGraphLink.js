@@ -29,9 +29,31 @@ export function merge(dest, src) {
 class MockGraphLink extends ApolloLink {
   constructor(getMockGraph, opts = {}) {
     super();
-    const { onError = defaultOnError } = opts;
+    const {
+      onError = defaultOnError,
+      fragmentIntrospectionQueryResultData,
+    } = opts;
     this.getMockGraph = getMockGraph;
     this.onError = onError;
+
+    if (fragmentIntrospectionQueryResultData) {
+      this.fragmentTypeMap = this.parseFragmentIntrospectionResult(
+        fragmentIntrospectionQueryResultData
+      );
+    }
+  }
+
+  // Modified version of https://github.com/apollographql/apollo-client/blob/b1ca2025d13a9a446be3b7fda2483767d3f61a6e/packages/apollo-cache-inmemory/src/fragmentMatcher.ts#L148
+  parseFragmentIntrospectionResult(introspectionResultData) {
+    const typeMap = {};
+    introspectionResultData.__schema.types.forEach(type => {
+      if (type.kind === 'UNION' || type.kind === 'INTERFACE') {
+        typeMap[type.name] = type.possibleTypes.map(
+          implementingType => implementingType.name
+        );
+      }
+    });
+    return typeMap;
   }
 
   request(operation, forward) {
@@ -104,13 +126,54 @@ class MockGraphLink extends ApolloLink {
             }
           }
 
-          const fragmentResult = executeSelectionSet(
-            fragment.selectionSet,
-            rootValue,
-            currentPath
-          );
+          const executeFragment = () => {
+            // only execute the fragment if it is the correct type
+            const fragmentResult = executeSelectionSet(
+              fragment.selectionSet,
+              rootValue,
+              currentPath
+            );
 
-          merge(result, fragmentResult);
+            merge(result, fragmentResult);
+          };
+
+          let fragmentType;
+          if (
+            fragment.typeCondition &&
+            fragment.typeCondition.kind === 'NamedType' &&
+            fragment.typeCondition.name.kind === 'Name'
+          ) {
+            fragmentType = fragment.typeCondition.name.value;
+          }
+          const objectType = rootValue.__typename;
+          if (!objectType) {
+            errors.push({
+              type: 'noTypename',
+              path: currentPath,
+              fragmentName: fragment.name.value,
+            });
+          } else if (fragmentType === objectType) {
+            executeFragment();
+          } else {
+            if (this.fragmentTypeMap) {
+              if (
+                this.fragmentTypeMap[fragmentType] &&
+                this.fragmentTypeMap[fragmentType].indexOf(objectType) !== -1
+              ) {
+                executeFragment();
+              } else {
+                // the fragment isn't a matching type. Ignore.
+              }
+            } else {
+              errors.push({
+                type: 'unionInterfaceTypes',
+                path: currentPath,
+                fragmentName: fragment.name && fragment.name.value,
+                objectType,
+                fragmentType,
+              });
+            }
+          }
         }
       });
 
@@ -225,6 +288,18 @@ class MockGraphLink extends ApolloLink {
             message = `This field received args and thus must be mocked as a function.`;
           } else if (e.type === 'resolver') {
             message = `Error from resolver: ${e.error.message}`;
+          } else if (e.type === 'noTypename') {
+            message = `Can't resolve fragment ${
+              e.fragmentName
+            } because __typename is missing from the mock graph`;
+          } else if (e.type === 'unionInterfaceTypes') {
+            message = `Can't resolve fragment ${
+              e.fragmentName ? e.fragmentName + ' ' : ''
+            }because its type (${
+              e.fragmentType
+            }) might not match the object's type (${
+              e.objectType
+            }). In order to handle union and interface types, you must pass \`fragmentIntrospectionQueryResultData\` when creating MockGraphLink. See https://github.com/dallonf/apollo-link-mock-graph/blob/master/README.md for details.`;
           }
           message = `${formatPath(e.path)}: ${message}`;
           return {

@@ -1,5 +1,126 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`fails on non-matching fragments without fragmentIntrospectionQueryResultData config 1`] = `[Error: GraphQL error: currentUser: Can't resolve fragment because its type (PremiumUser) might not match the object's type (FreeUser). In order to handle union and interface types, you must pass \`fragmentIntrospectionQueryResultData\` when creating MockGraphLink. See https://github.com/dallonf/apollo-link-mock-graph/blob/master/README.md for details.]`;
+
+exports[`fails on non-matching fragments without fragmentIntrospectionQueryResultData config 2`] = `
+Array [
+  Array [
+    Object {
+      "fragmentName": undefined,
+      "fragmentType": "PremiumUser",
+      "message": "currentUser: Can't resolve fragment because its type (PremiumUser) might not match the object's type (FreeUser). In order to handle union and interface types, you must pass \`fragmentIntrospectionQueryResultData\` when creating MockGraphLink. See https://github.com/dallonf/apollo-link-mock-graph/blob/master/README.md for details.",
+      "objectType": "FreeUser",
+      "path": Array [
+        "currentUser",
+      ],
+      "type": "unionInterfaceTypes",
+    },
+  ],
+  Object {
+    "definitions": Array [
+      Object {
+        "directives": Array [],
+        "kind": "OperationDefinition",
+        "name": Object {
+          "kind": "Name",
+          "value": "MyQuery",
+        },
+        "operation": "query",
+        "selectionSet": Object {
+          "kind": "SelectionSet",
+          "selections": Array [
+            Object {
+              "alias": undefined,
+              "arguments": Array [],
+              "directives": Array [],
+              "kind": "Field",
+              "name": Object {
+                "kind": "Name",
+                "value": "currentUser",
+              },
+              "selectionSet": Object {
+                "kind": "SelectionSet",
+                "selections": Array [
+                  Object {
+                    "alias": undefined,
+                    "arguments": Array [],
+                    "directives": Array [],
+                    "kind": "Field",
+                    "name": Object {
+                      "kind": "Name",
+                      "value": "id",
+                    },
+                    "selectionSet": undefined,
+                  },
+                  Object {
+                    "alias": undefined,
+                    "arguments": Array [],
+                    "directives": Array [],
+                    "kind": "Field",
+                    "name": Object {
+                      "kind": "Name",
+                      "value": "name",
+                    },
+                    "selectionSet": undefined,
+                  },
+                  Object {
+                    "directives": Array [],
+                    "kind": "InlineFragment",
+                    "selectionSet": Object {
+                      "kind": "SelectionSet",
+                      "selections": Array [
+                        Object {
+                          "alias": undefined,
+                          "arguments": Array [],
+                          "directives": Array [],
+                          "kind": "Field",
+                          "name": Object {
+                            "kind": "Name",
+                            "value": "nextPaymentDate",
+                          },
+                          "selectionSet": undefined,
+                        },
+                        Object {
+                          "kind": "Field",
+                          "name": Object {
+                            "kind": "Name",
+                            "value": "__typename",
+                          },
+                        },
+                      ],
+                    },
+                    "typeCondition": Object {
+                      "kind": "NamedType",
+                      "name": Object {
+                        "kind": "Name",
+                        "value": "PremiumUser",
+                      },
+                    },
+                  },
+                  Object {
+                    "kind": "Field",
+                    "name": Object {
+                      "kind": "Name",
+                      "value": "__typename",
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+        "variableDefinitions": Array [],
+      },
+    ],
+    "kind": "Document",
+    "loc": Object {
+      "end": 146,
+      "start": 0,
+    },
+  },
+]
+`;
+
 exports[`handles a lot of errors 1`] = `
 [Error: GraphQL error: userById({"id":"123"}).id: Field is missing from mock graph
 GraphQL error: userById({"id":"123"}).firstName: Field is missing from mock graph
@@ -564,6 +685,137 @@ Array [
     "kind": "Document",
     "loc": Object {
       "end": 89,
+      "start": 0,
+    },
+  },
+]
+`;
+
+exports[`reports a fragment on an object without a typename 1`] = `
+[Error: GraphQL error: currentUser: Can't resolve fragment UserView because __typename is missing from the mock graph
+GraphQL error: currentUser.__typename: Field is missing from mock graph]
+`;
+
+exports[`reports a fragment on an object without a typename 2`] = `
+Array [
+  Array [
+    Object {
+      "fragmentName": "UserView",
+      "message": "currentUser: Can't resolve fragment UserView because __typename is missing from the mock graph",
+      "path": Array [
+        "currentUser",
+      ],
+      "type": "noTypename",
+    },
+    Object {
+      "message": "currentUser.__typename: Field is missing from mock graph",
+      "path": Array [
+        "currentUser",
+        "__typename",
+      ],
+      "type": "missing",
+    },
+  ],
+  Object {
+    "definitions": Array [
+      Object {
+        "directives": Array [],
+        "kind": "OperationDefinition",
+        "name": Object {
+          "kind": "Name",
+          "value": "MyQuery",
+        },
+        "operation": "query",
+        "selectionSet": Object {
+          "kind": "SelectionSet",
+          "selections": Array [
+            Object {
+              "alias": undefined,
+              "arguments": Array [],
+              "directives": Array [],
+              "kind": "Field",
+              "name": Object {
+                "kind": "Name",
+                "value": "currentUser",
+              },
+              "selectionSet": Object {
+                "kind": "SelectionSet",
+                "selections": Array [
+                  Object {
+                    "alias": undefined,
+                    "arguments": Array [],
+                    "directives": Array [],
+                    "kind": "Field",
+                    "name": Object {
+                      "kind": "Name",
+                      "value": "id",
+                    },
+                    "selectionSet": undefined,
+                  },
+                  Object {
+                    "directives": Array [],
+                    "kind": "FragmentSpread",
+                    "name": Object {
+                      "kind": "Name",
+                      "value": "UserView",
+                    },
+                  },
+                  Object {
+                    "kind": "Field",
+                    "name": Object {
+                      "kind": "Name",
+                      "value": "__typename",
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+        "variableDefinitions": Array [],
+      },
+      Object {
+        "directives": Array [],
+        "kind": "FragmentDefinition",
+        "name": Object {
+          "kind": "Name",
+          "value": "UserView",
+        },
+        "selectionSet": Object {
+          "kind": "SelectionSet",
+          "selections": Array [
+            Object {
+              "alias": undefined,
+              "arguments": Array [],
+              "directives": Array [],
+              "kind": "Field",
+              "name": Object {
+                "kind": "Name",
+                "value": "name",
+              },
+              "selectionSet": undefined,
+            },
+            Object {
+              "kind": "Field",
+              "name": Object {
+                "kind": "Name",
+                "value": "__typename",
+              },
+            },
+          ],
+        },
+        "typeCondition": Object {
+          "kind": "NamedType",
+          "name": Object {
+            "kind": "Name",
+            "value": "User",
+          },
+        },
+      },
+    ],
+    "kind": "Document",
+    "loc": Object {
+      "end": 138,
       "start": 0,
     },
   },

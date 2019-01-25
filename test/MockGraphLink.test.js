@@ -1,14 +1,30 @@
 import { ApolloClient } from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import {
+  InMemoryCache,
+  IntrospectionFragmentMatcher,
+} from 'apollo-cache-inmemory';
 import gql from 'graphql-tag';
 import MockGraphLink from '../src/MockGraphLink';
 
-const createClient = getMockGraph => {
+const createClient = (getMockGraph, { introspectionQueryResultData } = {}) => {
   const onError = jest.fn();
   const link = new MockGraphLink(getMockGraph, {
     onError,
+    fragmentIntrospectionQueryResultData: introspectionQueryResultData,
   });
-  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+  const fragmentMatcher = introspectionQueryResultData
+    ? new IntrospectionFragmentMatcher({
+        introspectionQueryResultData,
+      })
+    : undefined;
+  const cacheOptions = {};
+  if (fragmentMatcher) {
+    cacheOptions.fragmentMatcher = fragmentMatcher;
+  }
+  const client = new ApolloClient({
+    link,
+    cache: new InMemoryCache(cacheOptions),
+  });
   return { client, onError };
 };
 
@@ -187,5 +203,99 @@ it('handles arrays', async () => {
       ],
     },
   });
+  expect(onError).not.toHaveBeenCalled();
+});
+
+it('handles inline fragments on type unions', async () => {
+  const query = gql`
+    {
+      posts {
+        id
+        ...PostView
+      }
+    }
+
+    fragment PostView on Post {
+      title
+      ... on PhotoPost {
+        photoUrl
+      }
+      ... on VideoPost {
+        youtubeId
+      }
+      ... on TextPost {
+        body
+      }
+    }
+  `;
+  const expectedResult = {
+    posts: [
+      {
+        __typename: 'TextPost',
+        id: '1',
+        title: 'Need some help',
+        body:
+          'How much wood could a woodchuck chuck if woodchuck could chuck wood? Asking for a friend.',
+      },
+      {
+        __typename: 'PhotoPost',
+        id: '2',
+        title: 'Look at this cat!',
+        photoUrl: 'https://http.cat/503',
+      },
+      {
+        __typename: 'VideoPost',
+        id: '3',
+        title: 'Check out this new single from my band',
+        youtubeId: 'dQw4w9WgXcQ',
+      },
+    ],
+  };
+  const mockGraph = {
+    Query: {
+      posts: [
+        {
+          __typename: 'TextPost',
+          id: '1',
+          title: 'Need some help',
+          body:
+            'How much wood could a woodchuck chuck if woodchuck could chuck wood? Asking for a friend.',
+        },
+        {
+          __typename: 'PhotoPost',
+          id: '2',
+          title: 'Look at this cat!',
+          photoUrl: 'https://http.cat/503',
+        },
+        {
+          __typename: 'VideoPost',
+          id: '3',
+          title: 'Check out this new single from my band',
+          youtubeId: 'dQw4w9WgXcQ',
+        },
+      ],
+    },
+  };
+  const { client, onError } = createClient(() => mockGraph, {
+    introspectionQueryResultData: {
+      __schema: {
+        types: [
+          {
+            kind: 'INTERFACE',
+            name: 'Post',
+            possibleTypes: [
+              { name: 'TextPost' },
+              { name: 'PhotoPost' },
+              { name: 'VideoPost' },
+            ],
+          },
+        ],
+      },
+    },
+  });
+  const result = await client.query({
+    query,
+  });
+  expect(result.data).toEqual(expectedResult);
   expect(onError).not.toHaveBeenCalled();
 });
