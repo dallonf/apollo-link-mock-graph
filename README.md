@@ -72,6 +72,8 @@ const link = new MockGraphLink(() => window.__MOCK_GQL_GRAPH, {
   onError: (errors, queryDocument) => {
     // report error to test runner
   },
+  fragmentIntrospectionQueryResultData: introspectionData,
+  timeoutMs: 100,
 });
 ```
 
@@ -114,6 +116,21 @@ Useful for testing; returns a promise that resolves when all active queries have
 `opts.waitToSettle?: boolean`
 
 Defaults to true. When true, will also check to see if any resolved queries have caused _other_ queries to start, and if so, will wait for those, too.
+
+Example:
+
+```js
+it('should hide save button', async () => {
+  const link = new MockGraphLink(() => mockGqlGraph);
+  const client = new ApolloClient({
+    link,
+    cache: new InMemoryCache(),
+  });
+  const wrapper = renderUi(client);
+  await link.waitForQueries();
+  expect(wrapper.find('saveButton')).not.toExist();
+});
+```
 
 ### MockGraphError
 
