@@ -107,6 +107,14 @@ If your queries contain fragments on union or interface types, you will need to 
 
 You can customize the time delay before a query resolves. Defaults to 100ms.
 
+#### `MockGraphLink.waitForQueries(opts: { waitToSettle?: boolean }?): Promise`
+
+Useful for testing; returns a promise that resolves when all active queries have resolved.
+
+`opts.waitToSettle?: boolean`
+
+Defaults to true. When true, will also check to see if any resolved queries have caused _other_ queries to start, and if so, will wait for those, too.
+
 ### MockGraphError
 
 ```ts

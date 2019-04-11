@@ -354,7 +354,6 @@ it('lets you wait for all queries to finish', async () => {
       greeting: args => `Hello, ${args.name}!`,
     },
   };
-
   const query = gql`
     query MyQuery($name: String) {
       greeting(name: $name)
@@ -376,6 +375,48 @@ it('lets you wait for all queries to finish', async () => {
     .query({
       query,
       variables: { name: 'Barney' },
+    })
+    .then(result => {
+      result2 = result;
+    });
+
+  await link.waitForQueries();
+
+  expect(result1).toEqual(
+    expect.objectContaining({ data: { greeting: 'Hello, Fred!' } })
+  );
+  expect(result2).toEqual(
+    expect.objectContaining({ data: { greeting: 'Hello, Barney!' } })
+  );
+});
+
+it('can wait for queries to settle', async () => {
+  const mockGraph = {
+    Query: {
+      greeting: args => `Hello, ${args.name}!`,
+    },
+  };
+  const query = gql`
+    query MyQuery($name: String) {
+      greeting(name: $name)
+    }
+  `;
+
+  const { client, link } = createClient(() => mockGraph);
+
+  let result1, result2;
+  client
+    .query({
+      query,
+      variables: { name: 'Fred' },
+    })
+    .then(result => {
+      result1 = result;
+
+      return client.query({
+        query,
+        variables: { name: 'Barney' },
+      });
     })
     .then(result => {
       result2 = result;

@@ -336,13 +336,17 @@ class MockGraphLink extends ApolloLink {
     return observable;
   }
 
-  waitForQueries() {
-    const promises = this.queriesInFlight.values();
-    return Promise.all(promises).then(() => {
-      return {
-        numberOfQueries: promises.length,
-      };
-    });
+  async waitForQueries({ waitToSettle = true } = {}) {
+    const promises = [...this.queriesInFlight.values()];
+
+    if (promises.length) {
+      await Promise.all(promises);
+      if (waitToSettle) {
+        // wait a tick for any new queries to start
+        await new Promise(resolve => setTimeout(resolve));
+        await this.waitForQueries();
+      }
+    }
   }
 }
 
