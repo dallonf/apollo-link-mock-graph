@@ -37,6 +37,8 @@ class MockGraphLink extends ApolloLink {
     this.getMockGraph = getMockGraph;
     this.onError = onError;
     this.timeoutMs = timeoutMs;
+    this.lastQueryId = 0;
+    this.queriesInFlight = new Map();
 
     if (fragmentIntrospectionQueryResultData) {
       this.fragmentTypeMap = this.parseFragmentIntrospectionResult(
@@ -315,12 +317,31 @@ class MockGraphLink extends ApolloLink {
       this.onError(formattedErrors, operation.query);
     }
 
-    return new Observable(sub => {
-      const timeout = setTimeout(() => {
-        sub.next({ data: result, errors: formattedErrors });
+    this.lastQueryId += 1;
+    const thisQueryId = this.lastQueryId;
+    const promise = new Promise(resolve =>
+      setTimeout(resolve, this.timeoutMs)
+    ).then(() => {
+      this.queriesInFlight.delete(thisQueryId);
+      return { data: result, errors: formattedErrors };
+    });
+    this.queriesInFlight.set(thisQueryId, promise);
+
+    const observable = new Observable(sub => {
+      promise.then(result => {
+        sub.next(result);
         sub.complete();
-      }, this.timeoutMs);
-      return () => clearTimeout(timeout);
+      });
+    });
+    return observable;
+  }
+
+  waitForQueries() {
+    const promises = this.queriesInFlight.values();
+    return Promise.all(promises).then(() => {
+      return {
+        numberOfQueries: promises.length,
+      };
     });
   }
 }

@@ -29,7 +29,7 @@ const createClient = (
     link,
     cache: new InMemoryCache(cacheOptions),
   });
-  return { client, onError };
+  return { client, link, onError };
 };
 
 it('mocks a query', async () => {
@@ -320,16 +320,15 @@ it('lets you customize the timeout', async () => {
     });
 
     const query = gql`
-      query MyQuery($name: String) {
+      query MyQuery {
         greeting
       }
     `;
 
     let resolved;
-    const resultPromise = client
+    client
       .query({
         query,
-        variables: { name: 'World' },
       })
       .then(result => {
         resolved = result;
@@ -347,4 +346,47 @@ it('lets you customize the timeout', async () => {
   } finally {
     jest.useRealTimers();
   }
+});
+
+it('lets you wait for all queries to finish', async () => {
+  const mockGraph = {
+    Query: {
+      greeting: args => `Hello, ${args.name}!`,
+    },
+  };
+
+  const query = gql`
+    query MyQuery($name: String) {
+      greeting(name: $name)
+    }
+  `;
+
+  const { client, link } = createClient(() => mockGraph);
+
+  let result1, result2;
+  client
+    .query({
+      query,
+      variables: { name: 'Fred' },
+    })
+    .then(result => {
+      result1 = result;
+    });
+  client
+    .query({
+      query,
+      variables: { name: 'Barney' },
+    })
+    .then(result => {
+      result2 = result;
+    });
+
+  await link.waitForQueries();
+
+  expect(result1).toEqual(
+    expect.objectContaining({ data: { greeting: 'Hello, Fred!' } })
+  );
+  expect(result2).toEqual(
+    expect.objectContaining({ data: { greeting: 'Hello, Barney!' } })
+  );
 });
