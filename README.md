@@ -103,6 +103,10 @@ interface IntrospectionResultData {
 
 If your queries contain fragments on union or interface types, you will need to provide this option so that the MockLinkGraph can distinguish between types. See https://www.apollographql.com/docs/react/advanced/fragments.html#fragment-matcher for more details on why this is needed and how to extract this data from your schema.
 
+`opts.timeoutMs?: number`
+
+You can customize the time delay before a query resolves. Defaults to 100ms.
+
 ### MockGraphError
 
 ```ts

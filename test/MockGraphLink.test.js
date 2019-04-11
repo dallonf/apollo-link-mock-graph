@@ -6,11 +6,15 @@ import {
 import gql from 'graphql-tag';
 import MockGraphLink from '../src/MockGraphLink';
 
-const createClient = (getMockGraph, { introspectionQueryResultData } = {}) => {
+const createClient = (
+  getMockGraph,
+  { introspectionQueryResultData, ...opts } = {}
+) => {
   const onError = jest.fn();
   const link = new MockGraphLink(getMockGraph, {
     onError,
     fragmentIntrospectionQueryResultData: introspectionQueryResultData,
+    ...opts,
   });
   const fragmentMatcher = introspectionQueryResultData
     ? new IntrospectionFragmentMatcher({
@@ -298,4 +302,49 @@ it('handles inline fragments on type unions', async () => {
   });
   expect(result.data).toEqual(expectedResult);
   expect(onError).not.toHaveBeenCalled();
+});
+
+it('lets you customize the timeout', async () => {
+  const realSetTimeout = setTimeout;
+  const waitRealTick = () => new Promise(resolve => realSetTimeout(resolve));
+  try {
+    jest.useFakeTimers();
+
+    const mockGraph = {
+      Query: {
+        greeting: 'Hello, World!',
+      },
+    };
+    const { client, onError } = createClient(() => mockGraph, {
+      timeoutMs: 200,
+    });
+
+    const query = gql`
+      query MyQuery($name: String) {
+        greeting
+      }
+    `;
+
+    let resolved;
+    const resultPromise = client
+      .query({
+        query,
+        variables: { name: 'World' },
+      })
+      .then(result => {
+        resolved = result;
+      });
+
+    jest.runTimersToTime(100);
+    await waitRealTick();
+    expect(resolved).toBeFalsy();
+
+    jest.runTimersToTime(100);
+    await waitRealTick();
+    expect(resolved.data).toEqual({
+      greeting: 'Hello, World!',
+    });
+  } finally {
+    jest.useRealTimers();
+  }
 });

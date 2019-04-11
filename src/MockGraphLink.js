@@ -32,9 +32,11 @@ class MockGraphLink extends ApolloLink {
     const {
       onError = defaultOnError,
       fragmentIntrospectionQueryResultData,
+      timeoutMs = 100,
     } = opts;
     this.getMockGraph = getMockGraph;
     this.onError = onError;
+    this.timeoutMs = timeoutMs;
 
     if (fragmentIntrospectionQueryResultData) {
       this.fragmentTypeMap = this.parseFragmentIntrospectionResult(
@@ -317,7 +319,7 @@ class MockGraphLink extends ApolloLink {
       const timeout = setTimeout(() => {
         sub.next({ data: result, errors: formattedErrors });
         sub.complete();
-      }, 100);
+      }, this.timeoutMs);
       return () => clearTimeout(timeout);
     });
   }
