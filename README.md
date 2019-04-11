@@ -72,6 +72,8 @@ const link = new MockGraphLink(() => window.__MOCK_GQL_GRAPH, {
   onError: (errors, queryDocument) => {
     // report error to test runner
   },
+  fragmentIntrospectionQueryResultData: introspectionData,
+  timeoutMs: 100,
 });
 ```
 
@@ -102,6 +104,33 @@ interface IntrospectionResultData {
 ```
 
 If your queries contain fragments on union or interface types, you will need to provide this option so that the MockLinkGraph can distinguish between types. See https://www.apollographql.com/docs/react/advanced/fragments.html#fragment-matcher for more details on why this is needed and how to extract this data from your schema.
+
+`opts.timeoutMs?: number`
+
+You can customize the time delay before a query resolves. Defaults to 100ms.
+
+#### `MockGraphLink.waitForQueries(opts: { waitToSettle?: boolean }?): Promise`
+
+Useful for testing; returns a promise that resolves when all active queries have resolved.
+
+`opts.waitToSettle?: boolean`
+
+Defaults to true. When true, will also check to see if any resolved queries have caused _other_ queries to start, and if so, will wait for those, too.
+
+Example:
+
+```js
+it('should hide save button', async () => {
+  const link = new MockGraphLink(() => mockGqlGraph);
+  const client = new ApolloClient({
+    link,
+    cache: new InMemoryCache(),
+  });
+  const wrapper = renderUi(client);
+  await link.waitForQueries();
+  expect(wrapper.find('saveButton')).not.toExist();
+});
+```
 
 ### MockGraphError
 

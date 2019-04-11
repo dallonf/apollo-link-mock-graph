@@ -6,11 +6,15 @@ import {
 import gql from 'graphql-tag';
 import MockGraphLink from '../src/MockGraphLink';
 
-const createClient = (getMockGraph, { introspectionQueryResultData } = {}) => {
+const createClient = (
+  getMockGraph,
+  { introspectionQueryResultData, ...opts } = {}
+) => {
   const onError = jest.fn();
   const link = new MockGraphLink(getMockGraph, {
     onError,
     fragmentIntrospectionQueryResultData: introspectionQueryResultData,
+    ...opts,
   });
   const fragmentMatcher = introspectionQueryResultData
     ? new IntrospectionFragmentMatcher({
@@ -25,7 +29,7 @@ const createClient = (getMockGraph, { introspectionQueryResultData } = {}) => {
     link,
     cache: new InMemoryCache(cacheOptions),
   });
-  return { client, onError };
+  return { client, link, onError };
 };
 
 it('mocks a query', async () => {
@@ -298,4 +302,132 @@ it('handles inline fragments on type unions', async () => {
   });
   expect(result.data).toEqual(expectedResult);
   expect(onError).not.toHaveBeenCalled();
+});
+
+it('lets you customize the timeout', async () => {
+  const realSetTimeout = setTimeout;
+  const waitRealTick = () => new Promise(resolve => realSetTimeout(resolve));
+  try {
+    jest.useFakeTimers();
+
+    const mockGraph = {
+      Query: {
+        greeting: 'Hello, World!',
+      },
+    };
+    const { client, onError } = createClient(() => mockGraph, {
+      timeoutMs: 200,
+    });
+
+    const query = gql`
+      query MyQuery {
+        greeting
+      }
+    `;
+
+    let resolved;
+    client
+      .query({
+        query,
+      })
+      .then(result => {
+        resolved = result;
+      });
+
+    jest.runTimersToTime(100);
+    await waitRealTick();
+    expect(resolved).toBeFalsy();
+
+    jest.runTimersToTime(100);
+    await waitRealTick();
+    expect(resolved.data).toEqual({
+      greeting: 'Hello, World!',
+    });
+  } finally {
+    jest.useRealTimers();
+  }
+});
+
+it('lets you wait for all queries to finish', async () => {
+  const mockGraph = {
+    Query: {
+      greeting: args => `Hello, ${args.name}!`,
+    },
+  };
+  const query = gql`
+    query MyQuery($name: String) {
+      greeting(name: $name)
+    }
+  `;
+
+  const { client, link } = createClient(() => mockGraph);
+
+  let result1, result2;
+  client
+    .query({
+      query,
+      variables: { name: 'Fred' },
+    })
+    .then(result => {
+      result1 = result;
+    });
+  client
+    .query({
+      query,
+      variables: { name: 'Barney' },
+    })
+    .then(result => {
+      result2 = result;
+    });
+
+  await link.waitForQueries();
+
+  expect(result1).toEqual(
+    expect.objectContaining({ data: { greeting: 'Hello, Fred!' } })
+  );
+  expect(result2).toEqual(
+    expect.objectContaining({ data: { greeting: 'Hello, Barney!' } })
+  );
+});
+
+it('can wait for queries to settle', async () => {
+  const mockGraph = {
+    Query: {
+      greeting: args => `Hello, ${args.name}!`,
+    },
+  };
+  const query = gql`
+    query MyQuery($name: String) {
+      greeting(name: $name)
+    }
+  `;
+
+  const { client, link } = createClient(() => mockGraph);
+
+  let result1, result2;
+  client
+    .query({
+      query,
+      variables: { name: 'Fred' },
+    })
+    .then(result => {
+      result1 = result;
+
+      return client.query({
+        query,
+        variables: { name: 'Barney' },
+      });
+    })
+    .then(result => {
+      result2 = result;
+    });
+
+  await link.waitForQueries();
+
+  expect(result1).toEqual(
+    expect.objectContaining({ data: { greeting: 'Hello, Fred!' } })
+  );
+  expect(result2).toEqual(
+    expect.objectContaining({ data: { greeting: 'Hello, Barney!' } })
+  );
 });

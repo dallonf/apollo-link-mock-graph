@@ -32,9 +32,13 @@ class MockGraphLink extends ApolloLink {
     const {
       onError = defaultOnError,
       fragmentIntrospectionQueryResultData,
+      timeoutMs = 100,
     } = opts;
     this.getMockGraph = getMockGraph;
     this.onError = onError;
+    this.timeoutMs = timeoutMs;
+    this.lastQueryId = 0;
+    this.queriesInFlight = new Map();
 
     if (fragmentIntrospectionQueryResultData) {
       this.fragmentTypeMap = this.parseFragmentIntrospectionResult(
@@ -313,13 +317,40 @@ class MockGraphLink extends ApolloLink {
       this.onError(formattedErrors, operation.query);
     }
 
-    return new Observable(sub => {
-      const timeout = setTimeout(() => {
-        sub.next({ data: result, errors: formattedErrors });
-        sub.complete();
-      }, 100);
-      return () => clearTimeout(timeout);
+    this.lastQueryId += 1;
+    const thisQueryId = this.lastQueryId;
+    const promise = new Promise(resolve =>
+      setTimeout(resolve, this.timeoutMs)
+    ).then(() => {
+      this.queriesInFlight.delete(thisQueryId);
+      return { data: result, errors: formattedErrors };
     });
+    this.queriesInFlight.set(thisQueryId, promise);
+
+    const observable = new Observable(sub => {
+      promise.then(result => {
+        sub.next(result);
+        sub.complete();
+      });
+    });
+    return observable;
+  }
+
+  waitForQueries({ waitToSettle = true } = {}) {
+    const promises = [...this.queriesInFlight.values()];
+
+    if (promises.length) {
+      return Promise.all(promises).then(() => {
+        if (waitToSettle) {
+          // wait a tick for any new queries to start
+          return new Promise(resolve => setTimeout(resolve)).then(() =>
+            this.waitForQueries()
+          );
+        }
+      });
+    } else {
+      return Promise.resolve();
+    }
   }
 }
 
