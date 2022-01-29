@@ -1,9 +1,8 @@
-import { ApolloClient } from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import gql from 'graphql-tag';
-import MockGraphLink from '../src/MockGraphLink';
+import { ApolloClient, InMemoryCache } from "@apollo/client/core";
+import gql from "graphql-tag";
+import MockGraphLink from "../src/MockGraphLink";
 
-const createClient = getMockGraph => {
+const createClient = (getMockGraph) => {
   const onError = jest.fn();
   const link = new MockGraphLink(getMockGraph, {
     onError,
@@ -12,14 +11,14 @@ const createClient = getMockGraph => {
   return { client, onError };
 };
 
-it('reports a missing field in the mock', async () => {
+it("reports a missing field in the mock", async () => {
   const mockGraph = {
     Query: {
-      userById: args => {
-        expect(args.id).toBe('123');
+      userById: (args) => {
+        expect(args.id).toBe("123");
         return {
-          __typename: 'User',
-          id: '123',
+          __typename: "User",
+          id: "123",
         };
       },
     },
@@ -41,9 +40,9 @@ it('reports a missing field in the mock', async () => {
     })
     .then(
       () => {
-        throw new Error('Should not have resolved');
+        throw new Error("Should not have resolved");
       },
-      err => err
+      (err) => err
     );
 
   expect(err).toMatchSnapshot();
@@ -51,10 +50,10 @@ it('reports a missing field in the mock', async () => {
   expect(onError.mock.calls[0]).toMatchSnapshot();
 });
 
-it('reports a function that returns undefined', async () => {
+it("reports a function that returns undefined", async () => {
   const mockGraph = {
     Query: {
-      userById: args => {},
+      userById: (args) => {},
     },
   };
   const { client, onError } = createClient(() => mockGraph);
@@ -74,9 +73,9 @@ it('reports a function that returns undefined', async () => {
     })
     .then(
       () => {
-        throw new Error('Should not have resolved');
+        throw new Error("Should not have resolved");
       },
-      err => err
+      (err) => err
     );
 
   expect(err).toMatchSnapshot();
@@ -84,12 +83,12 @@ it('reports a function that returns undefined', async () => {
   expect(onError.mock.calls[0]).toMatchSnapshot();
 });
 
-it('reports a field that needs to be mocked with a function', async () => {
+it("reports a field that needs to be mocked with a function", async () => {
   const mockGraph = {
     Query: {
       userById: {
-        id: '123',
-        name: 'Bob',
+        id: "123",
+        name: "Bob",
       },
     },
   };
@@ -110,9 +109,9 @@ it('reports a field that needs to be mocked with a function', async () => {
     })
     .then(
       () => {
-        throw new Error('Should not have resolved');
+        throw new Error("Should not have resolved");
       },
-      err => err
+      (err) => err
     );
 
   expect(err).toMatchSnapshot();
@@ -120,12 +119,12 @@ it('reports a field that needs to be mocked with a function', async () => {
   expect(onError.mock.calls[0]).toMatchSnapshot();
 });
 
-it('reports a fragment on an object without a typename', async () => {
+it("reports a fragment on an object without a typename", async () => {
   const mockGraph = {
     Query: {
       currentUser: {
-        id: '123',
-        name: 'Bob',
+        id: "123",
+        name: "Bob",
       },
     },
   };
@@ -150,9 +149,9 @@ it('reports a fragment on an object without a typename', async () => {
     })
     .then(
       () => {
-        throw new Error('Should not have resolved');
+        throw new Error("Should not have resolved");
       },
-      err => err
+      (err) => err
     );
 
   expect(err).toMatchSnapshot();
@@ -160,13 +159,13 @@ it('reports a fragment on an object without a typename', async () => {
   expect(onError.mock.calls[0]).toMatchSnapshot();
 });
 
-it('fails on non-matching fragments without fragmentIntrospectionQueryResultData config', async () => {
+it("fails on non-matching fragments without possibleTypes config", async () => {
   const mockGraph = {
     Query: {
       currentUser: {
-        __typename: 'FreeUser',
-        id: '123',
-        name: 'Bob',
+        __typename: "FreeUser",
+        id: "123",
+        name: "Bob",
       },
     },
   };
@@ -190,9 +189,9 @@ it('fails on non-matching fragments without fragmentIntrospectionQueryResultData
     })
     .then(
       () => {
-        throw new Error('Should not have resolved');
+        throw new Error("Should not have resolved");
       },
-      err => err
+      (err) => err
     );
 
   expect(err).toMatchSnapshot();
@@ -200,10 +199,10 @@ it('fails on non-matching fragments without fragmentIntrospectionQueryResultData
   expect(onError.mock.calls[0]).toMatchSnapshot();
 });
 
-it('handles an exception in a resolver', async () => {
+it("handles an exception in a resolver", async () => {
   const mockGraph = {
     Query: {
-      userById: args => {
+      userById: (args) => {
         return args.explode();
       },
     },
@@ -225,9 +224,9 @@ it('handles an exception in a resolver', async () => {
     })
     .then(
       () => {
-        throw new Error('Should not have resolved');
+        throw new Error("Should not have resolved");
       },
-      err => err
+      (err) => err
     );
 
   expect(err).toMatchSnapshot();
@@ -235,7 +234,7 @@ it('handles an exception in a resolver', async () => {
   expect(onError.mock.calls[0]).toMatchSnapshot();
 });
 
-it('handles a lot of errors', async () => {
+it("handles a lot of errors", async () => {
   const query = gql`
     query QueryWithErrors {
       userById(id: "123") {
@@ -254,7 +253,7 @@ it('handles a lot of errors', async () => {
 
   const mockGraph = {
     Query: {
-      userById: args => {
+      userById: (args) => {
         return {
           posts: [{}, {}, {}],
         };
@@ -269,9 +268,9 @@ it('handles a lot of errors', async () => {
     })
     .then(
       () => {
-        throw new Error('Should not have resolved');
+        throw new Error("Should not have resolved");
       },
-      err => err
+      (err) => err
     );
 
   expect(err).toMatchSnapshot();

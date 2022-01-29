@@ -1,14 +1,14 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`fails on non-matching fragments without fragmentIntrospectionQueryResultData config 1`] = `[Error: GraphQL error: currentUser: Can't resolve fragment because its type (PremiumUser) might not match the object's type (FreeUser). In order to handle union and interface types, you must pass \`fragmentIntrospectionQueryResultData\` when creating MockGraphLink. See https://github.com/dallonf/apollo-link-mock-graph/blob/master/README.md for details.]`;
+exports[`fails on non-matching fragments without possibleTypes config 1`] = `[Error: currentUser: Can't resolve fragment because its type (PremiumUser) might not match the object's type (FreeUser). In order to handle union and interface types, you must pass \`possibleTypes\` when creating MockGraphLink. See https://github.com/dallonf/apollo-link-mock-graph/blob/master/README.md for details.]`;
 
-exports[`fails on non-matching fragments without fragmentIntrospectionQueryResultData config 2`] = `
+exports[`fails on non-matching fragments without possibleTypes config 2`] = `
 Array [
   Array [
     Object {
       "fragmentName": undefined,
       "fragmentType": "PremiumUser",
-      "message": "currentUser: Can't resolve fragment because its type (PremiumUser) might not match the object's type (FreeUser). In order to handle union and interface types, you must pass \`fragmentIntrospectionQueryResultData\` when creating MockGraphLink. See https://github.com/dallonf/apollo-link-mock-graph/blob/master/README.md for details.",
+      "message": "currentUser: Can't resolve fragment because its type (PremiumUser) might not match the object's type (FreeUser). In order to handle union and interface types, you must pass \`possibleTypes\` when creating MockGraphLink. See https://github.com/dallonf/apollo-link-mock-graph/blob/master/README.md for details.",
       "objectType": "FreeUser",
       "path": Array [
         "currentUser",
@@ -122,25 +122,25 @@ Array [
 `;
 
 exports[`handles a lot of errors 1`] = `
-[Error: GraphQL error: userById({"id":"123"}).id: Field is missing from mock graph
-GraphQL error: userById({"id":"123"}).firstName: Field is missing from mock graph
-GraphQL error: userById({"id":"123"}).lastName: Field is missing from mock graph
-GraphQL error: userById({"id":"123"}).posts[0].id: Field is missing from mock graph
-GraphQL error: userById({"id":"123"}).posts[0].message: Field is missing from mock graph
-GraphQL error: userById({"id":"123"}).posts[0].date: Field is missing from mock graph
-GraphQL error: userById({"id":"123"}).posts[0].likes: Field is missing from mock graph
-GraphQL error: userById({"id":"123"}).posts[0].__typename: Field is missing from mock graph
-GraphQL error: userById({"id":"123"}).posts[1].id: Field is missing from mock graph
-GraphQL error: userById({"id":"123"}).posts[1].message: Field is missing from mock graph
-GraphQL error: userById({"id":"123"}).posts[1].date: Field is missing from mock graph
-GraphQL error: userById({"id":"123"}).posts[1].likes: Field is missing from mock graph
-GraphQL error: userById({"id":"123"}).posts[1].__typename: Field is missing from mock graph
-GraphQL error: userById({"id":"123"}).posts[2].id: Field is missing from mock graph
-GraphQL error: userById({"id":"123"}).posts[2].message: Field is missing from mock graph
-GraphQL error: userById({"id":"123"}).posts[2].date: Field is missing from mock graph
-GraphQL error: userById({"id":"123"}).posts[2].likes: Field is missing from mock graph
-GraphQL error: userById({"id":"123"}).posts[2].__typename: Field is missing from mock graph
-GraphQL error: userById({"id":"123"}).__typename: Field is missing from mock graph]
+[Error: userById({"id":"123"}).id: Field is missing from mock graph
+userById({"id":"123"}).firstName: Field is missing from mock graph
+userById({"id":"123"}).lastName: Field is missing from mock graph
+userById({"id":"123"}).posts[0].id: Field is missing from mock graph
+userById({"id":"123"}).posts[0].message: Field is missing from mock graph
+userById({"id":"123"}).posts[0].date: Field is missing from mock graph
+userById({"id":"123"}).posts[0].likes: Field is missing from mock graph
+userById({"id":"123"}).posts[0].__typename: Field is missing from mock graph
+userById({"id":"123"}).posts[1].id: Field is missing from mock graph
+userById({"id":"123"}).posts[1].message: Field is missing from mock graph
+userById({"id":"123"}).posts[1].date: Field is missing from mock graph
+userById({"id":"123"}).posts[1].likes: Field is missing from mock graph
+userById({"id":"123"}).posts[1].__typename: Field is missing from mock graph
+userById({"id":"123"}).posts[2].id: Field is missing from mock graph
+userById({"id":"123"}).posts[2].message: Field is missing from mock graph
+userById({"id":"123"}).posts[2].date: Field is missing from mock graph
+userById({"id":"123"}).posts[2].likes: Field is missing from mock graph
+userById({"id":"123"}).posts[2].__typename: Field is missing from mock graph
+userById({"id":"123"}).__typename: Field is missing from mock graph]
 `;
 
 exports[`handles a lot of errors 2`] = `
@@ -490,7 +490,7 @@ Array [
 ]
 `;
 
-exports[`handles an exception in a resolver 1`] = `[Error: GraphQL error: userById({"id":"123"}): Error from resolver: args.explode is not a function]`;
+exports[`handles an exception in a resolver 1`] = `[Error: userById({"id":"123"}): Error from resolver: args.explode is not a function]`;
 
 exports[`handles an exception in a resolver 2`] = `
 Array [
@@ -591,7 +591,7 @@ Array [
 ]
 `;
 
-exports[`reports a field that needs to be mocked with a function 1`] = `[Error: GraphQL error: userById({"id":"123"}): This field received args and thus must be mocked as a function.]`;
+exports[`reports a field that needs to be mocked with a function 1`] = `[Error: userById({"id":"123"}): This field received args and thus must be mocked as a function.]`;
 
 exports[`reports a field that needs to be mocked with a function 2`] = `
 Array [
@@ -692,8 +692,8 @@ Array [
 `;
 
 exports[`reports a fragment on an object without a typename 1`] = `
-[Error: GraphQL error: currentUser: Can't resolve fragment UserView because __typename is missing from the mock graph
-GraphQL error: currentUser.__typename: Field is missing from mock graph]
+[Error: currentUser: Can't resolve fragment UserView because __typename is missing from the mock graph
+currentUser.__typename: Field is missing from mock graph]
 `;
 
 exports[`reports a fragment on an object without a typename 2`] = `
@@ -822,7 +822,7 @@ Array [
 ]
 `;
 
-exports[`reports a function that returns undefined 1`] = `[Error: GraphQL error: userById({"id":"123"}): Mock resolver returned undefined; did you mean to return null?]`;
+exports[`reports a function that returns undefined 1`] = `[Error: userById({"id":"123"}): Mock resolver returned undefined; did you mean to return null?]`;
 
 exports[`reports a function that returns undefined 2`] = `
 Array [
@@ -922,7 +922,7 @@ Array [
 ]
 `;
 
-exports[`reports a missing field in the mock 1`] = `[Error: GraphQL error: userById({"id":"123"}).name: Field is missing from mock graph]`;
+exports[`reports a missing field in the mock 1`] = `[Error: userById({"id":"123"}).name: Field is missing from mock graph]`;
 
 exports[`reports a missing field in the mock 2`] = `
 Array [

@@ -1,29 +1,18 @@
-import { ApolloClient } from 'apollo-client';
-import {
-  InMemoryCache,
-  IntrospectionFragmentMatcher,
-} from 'apollo-cache-inmemory';
-import gql from 'graphql-tag';
-import MockGraphLink from '../src/MockGraphLink';
+import { ApolloClient, InMemoryCache } from "@apollo/client/core";
 
-const createClient = (
-  getMockGraph,
-  { introspectionQueryResultData, ...opts } = {}
-) => {
+import gql from "graphql-tag";
+import MockGraphLink from "../src/MockGraphLink";
+
+const createClient = (getMockGraph, { possibleTypes, ...opts } = {}) => {
   const onError = jest.fn();
   const link = new MockGraphLink(getMockGraph, {
+    possibleTypes,
     onError,
-    fragmentIntrospectionQueryResultData: introspectionQueryResultData,
     ...opts,
   });
-  const fragmentMatcher = introspectionQueryResultData
-    ? new IntrospectionFragmentMatcher({
-        introspectionQueryResultData,
-      })
-    : undefined;
   const cacheOptions = {};
-  if (fragmentMatcher) {
-    cacheOptions.fragmentMatcher = fragmentMatcher;
+  if (possibleTypes) {
+    cacheOptions.possibleTypes = possibleTypes;
   }
   const client = new ApolloClient({
     link,
@@ -32,10 +21,10 @@ const createClient = (
   return { client, link, onError };
 };
 
-it('mocks a query', async () => {
+it("mocks a query", async () => {
   const mockGraph = {
     Query: {
-      greeting: 'Hello, World!',
+      greeting: "Hello, World!",
     },
   };
   const { client, onError } = createClient(() => mockGraph);
@@ -48,19 +37,19 @@ it('mocks a query', async () => {
 
   const result = await client.query({
     query,
-    variables: { name: 'World' },
+    variables: { name: "World" },
   });
 
   expect(result.data).toEqual({
-    greeting: 'Hello, World!',
+    greeting: "Hello, World!",
   });
   expect(onError).not.toHaveBeenCalled();
 });
 
-it('mocks a query with arguments', async () => {
+it("mocks a query with arguments", async () => {
   const mockGraph = {
     Query: {
-      greeting: args => `Hello, ${args.name}!`,
+      greeting: (args) => `Hello, ${args.name}!`,
     },
   };
   const { client, onError } = createClient(() => mockGraph);
@@ -72,24 +61,24 @@ it('mocks a query with arguments', async () => {
   `;
   const result = await client.query({
     query,
-    variables: { name: 'Bob' },
+    variables: { name: "Bob" },
   });
 
   expect(result.data).toEqual({
-    greeting: 'Hello, Bob!',
+    greeting: "Hello, Bob!",
   });
   expect(onError).not.toHaveBeenCalled();
 });
 
-it('mocks a mutation', async () => {
+it("mocks a mutation", async () => {
   const mockGraph = {
     Mutation: {
-      updateUser: args => {
+      updateUser: (args) => {
         return {
-          __typename: 'User',
+          __typename: "User",
           id: args.id,
-          name: args.name || 'Joe',
-          email: 'test@test.com',
+          name: args.name || "Joe",
+          email: "test@test.com",
         };
       },
     },
@@ -107,24 +96,24 @@ it('mocks a mutation', async () => {
   `;
   const result = await client.mutate({
     mutation,
-    variables: { id: '123', name: 'Joe' },
+    variables: { id: "123", name: "Joe" },
   });
 
   expect(result.data).toEqual({
     updateUser: {
-      __typename: 'User',
-      id: '123',
-      name: 'Joe',
-      email: 'test@test.com',
+      __typename: "User",
+      id: "123",
+      name: "Joe",
+      email: "test@test.com",
     },
   });
   expect(onError).not.toHaveBeenCalled();
 });
 
-it('handles null results', async () => {
+it("handles null results", async () => {
   const mockGraph = {
     Query: {
-      userById: args => null,
+      userById: (args) => null,
       greeting: null,
     },
   };
@@ -150,7 +139,7 @@ it('handles null results', async () => {
   expect(onError).not.toHaveBeenCalled();
 });
 
-it('handles arrays', async () => {
+it("handles arrays", async () => {
   const query = gql`
     query MyQuery {
       userById(id: "123") {
@@ -166,19 +155,19 @@ it('handles arrays', async () => {
   `;
   const mockGraph = {
     Query: {
-      userById: args => {
-        expect(args.id).toBe('123');
+      userById: (args) => {
+        expect(args.id).toBe("123");
         return {
-          __typename: 'User',
-          id: '123',
-          name: 'Bob',
+          __typename: "User",
+          id: "123",
+          name: "Bob",
           posts: [
-            { __typename: 'Post', id: '1', message: 'Hello world!', likes: 10 },
-            { __typename: 'Post', id: '2', message: 'cat.gif', likes: 15 },
+            { __typename: "Post", id: "1", message: "Hello world!", likes: 10 },
+            { __typename: "Post", id: "2", message: "cat.gif", likes: 15 },
             {
-              __typename: 'Post',
-              id: '3',
-              message: 'Hot take: Die Hard is the best Christmas movie',
+              __typename: "Post",
+              id: "3",
+              message: "Hot take: Die Hard is the best Christmas movie",
               likes: 3,
             },
           ],
@@ -192,16 +181,16 @@ it('handles arrays', async () => {
   });
   expect(result.data).toEqual({
     userById: {
-      __typename: 'User',
-      id: '123',
-      name: 'Bob',
+      __typename: "User",
+      id: "123",
+      name: "Bob",
       posts: [
-        { __typename: 'Post', id: '1', message: 'Hello world!', likes: 10 },
-        { __typename: 'Post', id: '2', message: 'cat.gif', likes: 15 },
+        { __typename: "Post", id: "1", message: "Hello world!", likes: 10 },
+        { __typename: "Post", id: "2", message: "cat.gif", likes: 15 },
         {
-          __typename: 'Post',
-          id: '3',
-          message: 'Hot take: Die Hard is the best Christmas movie',
+          __typename: "Post",
+          id: "3",
+          message: "Hot take: Die Hard is the best Christmas movie",
           likes: 3,
         },
       ],
@@ -210,7 +199,7 @@ it('handles arrays', async () => {
   expect(onError).not.toHaveBeenCalled();
 });
 
-it('handles inline fragments on type unions', async () => {
+it("handles inline fragments on type unions", async () => {
   const query = gql`
     {
       posts {
@@ -235,23 +224,22 @@ it('handles inline fragments on type unions', async () => {
   const expectedResult = {
     posts: [
       {
-        __typename: 'TextPost',
-        id: '1',
-        title: 'Need some help',
-        body:
-          'How much wood could a woodchuck chuck if woodchuck could chuck wood? Asking for a friend.',
+        __typename: "TextPost",
+        id: "1",
+        title: "Need some help",
+        body: "How much wood could a woodchuck chuck if woodchuck could chuck wood? Asking for a friend.",
       },
       {
-        __typename: 'PhotoPost',
-        id: '2',
-        title: 'Look at this cat!',
-        photoUrl: 'https://http.cat/503',
+        __typename: "PhotoPost",
+        id: "2",
+        title: "Look at this cat!",
+        photoUrl: "https://http.cat/503",
       },
       {
-        __typename: 'VideoPost',
-        id: '3',
-        title: 'Check out this new single from my band',
-        youtubeId: 'dQw4w9WgXcQ',
+        __typename: "VideoPost",
+        id: "3",
+        title: "Check out this new single from my band",
+        youtubeId: "dQw4w9WgXcQ",
       },
     ],
   };
@@ -259,42 +247,29 @@ it('handles inline fragments on type unions', async () => {
     Query: {
       posts: [
         {
-          __typename: 'TextPost',
-          id: '1',
-          title: 'Need some help',
-          body:
-            'How much wood could a woodchuck chuck if woodchuck could chuck wood? Asking for a friend.',
+          __typename: "TextPost",
+          id: "1",
+          title: "Need some help",
+          body: "How much wood could a woodchuck chuck if woodchuck could chuck wood? Asking for a friend.",
         },
         {
-          __typename: 'PhotoPost',
-          id: '2',
-          title: 'Look at this cat!',
-          photoUrl: 'https://http.cat/503',
+          __typename: "PhotoPost",
+          id: "2",
+          title: "Look at this cat!",
+          photoUrl: "https://http.cat/503",
         },
         {
-          __typename: 'VideoPost',
-          id: '3',
-          title: 'Check out this new single from my band',
-          youtubeId: 'dQw4w9WgXcQ',
+          __typename: "VideoPost",
+          id: "3",
+          title: "Check out this new single from my band",
+          youtubeId: "dQw4w9WgXcQ",
         },
       ],
     },
   };
   const { client, onError } = createClient(() => mockGraph, {
-    introspectionQueryResultData: {
-      __schema: {
-        types: [
-          {
-            kind: 'INTERFACE',
-            name: 'Post',
-            possibleTypes: [
-              { name: 'TextPost' },
-              { name: 'PhotoPost' },
-              { name: 'VideoPost' },
-            ],
-          },
-        ],
-      },
+    possibleTypes: {
+      Post: ["TextPost", "PhotoPost", "VideoPost"],
     },
   });
   const result = await client.query({
@@ -304,15 +279,15 @@ it('handles inline fragments on type unions', async () => {
   expect(onError).not.toHaveBeenCalled();
 });
 
-it('lets you customize the timeout', async () => {
+it("lets you customize the timeout", async () => {
   const realSetTimeout = setTimeout;
-  const waitRealTick = () => new Promise(resolve => realSetTimeout(resolve));
+  const waitRealTick = () => new Promise((resolve) => realSetTimeout(resolve));
   try {
     jest.useFakeTimers();
 
     const mockGraph = {
       Query: {
-        greeting: 'Hello, World!',
+        greeting: "Hello, World!",
       },
     };
     const { client, onError } = createClient(() => mockGraph, {
@@ -330,7 +305,7 @@ it('lets you customize the timeout', async () => {
       .query({
         query,
       })
-      .then(result => {
+      .then((result) => {
         resolved = result;
       });
 
@@ -341,17 +316,17 @@ it('lets you customize the timeout', async () => {
     jest.runTimersToTime(100);
     await waitRealTick();
     expect(resolved.data).toEqual({
-      greeting: 'Hello, World!',
+      greeting: "Hello, World!",
     });
   } finally {
     jest.useRealTimers();
   }
 });
 
-it('lets you wait for all queries to finish', async () => {
+it("lets you wait for all queries to finish", async () => {
   const mockGraph = {
     Query: {
-      greeting: args => `Hello, ${args.name}!`,
+      greeting: (args) => `Hello, ${args.name}!`,
     },
   };
   const query = gql`
@@ -366,34 +341,34 @@ it('lets you wait for all queries to finish', async () => {
   client
     .query({
       query,
-      variables: { name: 'Fred' },
+      variables: { name: "Fred" },
     })
-    .then(result => {
+    .then((result) => {
       result1 = result;
     });
   client
     .query({
       query,
-      variables: { name: 'Barney' },
+      variables: { name: "Barney" },
     })
-    .then(result => {
+    .then((result) => {
       result2 = result;
     });
 
   await link.waitForQueries();
 
   expect(result1).toEqual(
-    expect.objectContaining({ data: { greeting: 'Hello, Fred!' } })
+    expect.objectContaining({ data: { greeting: "Hello, Fred!" } })
   );
   expect(result2).toEqual(
-    expect.objectContaining({ data: { greeting: 'Hello, Barney!' } })
+    expect.objectContaining({ data: { greeting: "Hello, Barney!" } })
   );
 });
 
-it('can wait for queries to settle', async () => {
+it("can wait for queries to settle", async () => {
   const mockGraph = {
     Query: {
-      greeting: args => `Hello, ${args.name}!`,
+      greeting: (args) => `Hello, ${args.name}!`,
     },
   };
   const query = gql`
@@ -408,26 +383,26 @@ it('can wait for queries to settle', async () => {
   client
     .query({
       query,
-      variables: { name: 'Fred' },
+      variables: { name: "Fred" },
     })
-    .then(result => {
+    .then((result) => {
       result1 = result;
 
       return client.query({
         query,
-        variables: { name: 'Barney' },
+        variables: { name: "Barney" },
       });
     })
-    .then(result => {
+    .then((result) => {
       result2 = result;
     });
 
   await link.waitForQueries();
 
   expect(result1).toEqual(
-    expect.objectContaining({ data: { greeting: 'Hello, Fred!' } })
+    expect.objectContaining({ data: { greeting: "Hello, Fred!" } })
   );
   expect(result2).toEqual(
-    expect.objectContaining({ data: { greeting: 'Hello, Barney!' } })
+    expect.objectContaining({ data: { greeting: "Hello, Barney!" } })
   );
 });

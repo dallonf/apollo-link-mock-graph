@@ -72,7 +72,7 @@ const link = new MockGraphLink(() => window.__MOCK_GQL_GRAPH, {
   onError: (errors, queryDocument) => {
     // report error to test runner
   },
-  fragmentIntrospectionQueryResultData: introspectionData,
+  possibleTypes,
   timeoutMs: 100,
 });
 ```
@@ -87,23 +87,15 @@ This function is called when an error occurs while resolving a query from the mo
 
 By default, this will print the query and errors to `console.error`. You can also pass a no-op function to suppress this behavior.
 
-`opts.fragmentIntrospectionQueryResultData?: IntrospectionResultData`
+`opts.possibleTypes?: PossibleTypes`
 
 ```ts
-interface IntrospectionResultData {
-  __schema: {
-    types: {
-      kind: string;
-      name: string;
-      possibleTypes: {
-        name: string;
-      }[];
-    }[];
-  };
+interface PossibleTypes {
+  [typeName]: string[]
 }
 ```
 
-If your queries contain fragments on union or interface types, you will need to provide this option so that the MockLinkGraph can distinguish between types. See https://www.apollographql.com/docs/react/advanced/fragments.html#fragment-matcher for more details on why this is needed and how to extract this data from your schema.
+If your queries contain fragments on union or interface types, you will need to provide this option so that the MockLinkGraph can distinguish between types. See https://www.apollographql.com/docs/react/data/fragments/#using-fragments-with-unions-and-interfaces for more details on why this is needed and how to extract this data from your schema.
 
 `opts.timeoutMs?: number`
 
