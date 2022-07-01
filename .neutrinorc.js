@@ -152,6 +152,7 @@ module.exports = {
     }),
     jest({
       setupFiles: ["<rootDir>/test/setupTests.js"],
+      testEnvironment: "node",
     }),
   ],
 };
