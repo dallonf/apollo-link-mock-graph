@@ -1,3 +1,8 @@
+# 2.0.1
+
+* Upgrade to Apollo Client 3.6.9
+* Upgrade to graphql 16.5.0
+
 # 2.0.0
 
 * Breaking: Upgrade to Apollo Client 3.x
