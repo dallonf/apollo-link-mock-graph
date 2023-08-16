@@ -1,3 +1,5 @@
+**NOTE:** This package is deprecated and will no longer receive security updates. [GraphQL Tools has a pretty good Mocking system](https://the-guild.dev/graphql/tools/docs/mocking) that I'd recommend using instead.
+
 # Apollo MockGraphLink
 
 [![Build Status](https://travis-ci.org/dallonf/apollo-link-mock-graph.svg?branch=master)](https://travis-ci.org/dallonf/apollo-link-mock-graph)
